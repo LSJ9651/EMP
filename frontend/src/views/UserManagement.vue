@@ -1,24 +1,31 @@
 <template>
   <div class="user-management-page">
-    <h2 class="page-title">用户管理</h2>
+    <PageTitle title="用户管理" icon="User" />
 
-    <el-button type="primary" @click="showAddDialog" style="margin-bottom: 16px">
-      <el-icon><Plus /></el-icon>添加用户
-    </el-button>
+    <Toolbar>
+      <template #left>
+        <el-button type="primary" @click="showAddDialog">
+          <el-icon><Plus /></el-icon>添加用户
+        </el-button>
+      </template>
+      <template #right>
+        <span style="font-size: 13px; color: var(--text-tertiary)">共 {{ users.length }} 个用户</span>
+      </template>
+    </Toolbar>
 
-    <el-table :data="users" border stripe v-loading="loading">
+    <el-table :data="users" border v-loading="loading">
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column prop="username" label="用户名" width="150" />
       <el-table-column prop="role" label="角色" width="120">
         <template #default="{ row }">
-          <el-tag :type="row.role === 'admin' ? 'danger' : 'primary'" size="small">
+          <el-tag :type="row.role === 'admin' ? 'danger' : 'primary'" size="small" round>
             {{ row.role === 'admin' ? '管理员' : '普通用户' }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
+          <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small" round>
             {{ row.status === 'active' ? '启用' : '停用' }}
           </el-tag>
         </template>
@@ -31,21 +38,21 @@
       <el-table-column prop="created_at" label="创建时间" width="180" />
       <el-table-column label="操作" min-width="240">
         <template #default="{ row }">
-          <el-button size="small" type="success" @click="showPermissionDialog(row)">权限</el-button>
-          <el-button size="small" @click="showEditDialog(row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="success" size="small" @click="showPermissionDialog(row)">权限</el-button>
+          <el-button link type="primary" size="small" @click="showEditDialog(row)">编辑</el-button>
+          <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
 
     <!-- 添加/编辑用户对话框 -->
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '添加用户'" width="450px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '添加用户'" width="450px" top="5vh">
       <el-form :model="form" label-width="100px">
         <el-form-item label="用户名">
           <el-input v-model="form.username" :disabled="isEdit" />
         </el-form-item>
         <el-form-item v-if="!isEdit" label="密码">
-          <el-input v-model="form.password" type="password" show-password />
+          <el-input v-model="form.password" type="password" show-password placeholder="请输入密码" />
         </el-form-item>
         <el-form-item label="角色">
           <el-select v-model="form.role" style="width: 100%">
@@ -70,11 +77,11 @@
     </el-dialog>
 
     <!-- 权限配置对话框 -->
-    <el-dialog v-model="permDialogVisible" width="720px" :close-on-click-modal="false">
+    <el-dialog v-model="permDialogVisible" width="720px" :close-on-click-modal="false" top="5vh">
       <template #header>
         <div style="display: flex; align-items: center; gap: 12px">
           <h3 style="margin: 0">权限配置：{{ permTargetUser?.username }}</h3>
-          <el-tag :type="permTargetUser?.role === 'admin' ? 'danger' : 'primary'" size="small">
+          <el-tag :type="permTargetUser?.role === 'admin' ? 'danger' : 'primary'" size="small" round>
             {{ permTargetUser?.role === 'admin' ? '管理员' : '普通用户' }}
           </el-tag>
         </div>
@@ -140,6 +147,8 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getUsers, createUser, updateUser, getUserPermissions, updateUserPermissions } from '../api/api.js'
+import PageTitle from '../components/common/PageTitle.vue'
+import Toolbar from '../components/common/Toolbar.vue'
 
 const users = ref([])
 const loading = ref(false)
@@ -285,7 +294,7 @@ async function handleSave() {
 
 async function handleDelete(row) {
   try {
-    await ElMessageBox.confirm(`确定删除用户 "${row.username}" 吗？`, '确认删除', { type: 'warning' })
+    await ElMessageBox.confirm(`确定删除用户 "${row.name}" 吗？`, '确认删除', { type: 'warning' })
     await updateUser(row.id, { status: 'deleted' })
     ElMessage.success('用户已删除')
     await fetchUsers()
@@ -309,12 +318,7 @@ onMounted(fetchUsers)
 
 <style scoped>
 .user-management-page {
-  padding: 20px;
-}
-.page-title {
-  margin-bottom: 16px;
-  font-size: 18px;
-  color: #303133;
+  padding: 0;
 }
 
 /* ──── 权限矩阵 ──── */
@@ -325,13 +329,13 @@ onMounted(fetchUsers)
 }
 
 .perm-module-card {
-  border: 1px solid #e4e7ed;
-  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   transition: border-color 0.2s;
 }
 .perm-module-card:hover {
-  border-color: #409eff;
+  border-color: var(--brand-primary);
 }
 
 .perm-module-header {
@@ -340,7 +344,7 @@ onMounted(fetchUsers)
   gap: 8px;
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px dashed #ebeef5;
+  border-bottom: 1px dashed var(--border-light);
 }
 
 .perm-module-icon {

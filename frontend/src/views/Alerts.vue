@@ -1,46 +1,50 @@
 <template>
   <div class="alerts-page">
-    <h2 class="page-title">告警管理</h2>
+    <PageTitle title="告警管理" icon="Warning" />
 
     <el-tabs v-model="activeTab">
       <el-tab-pane label="告警记录" name="records">
-        <div class="tab-header">
-          <el-select v-model="filterDevice" placeholder="筛选设备" clearable style="width: 180px">
-            <el-option v-for="d in devices" :key="d.id" :label="d.name" :value="d.id" />
-          </el-select>
-          <el-switch v-model="onlyUnresolved" active-text="仅未处理" style="margin-left: 16px" />
-          <el-button @click="fetchRecords" style="margin-left: 16px" type="primary" size="small">刷新</el-button>
-        </div>
+        <Toolbar>
+          <template #left>
+            <el-select v-model="filterDevice" placeholder="筛选设备" clearable style="width: 180px">
+              <el-option v-for="d in devices" :key="d.id" :label="d.name" :value="d.id" />
+            </el-select>
+            <el-switch v-model="onlyUnresolved" active-text="仅未处理" style="margin-left: 12px" />
+          </template>
+          <template #right>
+            <el-button type="primary" @click="fetchRecords" size="small">刷新</el-button>
+          </template>
+        </Toolbar>
 
-        <el-table :data="records" border stripe v-loading="loading" style="margin-top: 16px">
+        <el-table :data="records" border v-loading="loading" style="margin-top: 16px">
           <el-table-column prop="id" label="ID" width="60" />
           <el-table-column prop="device_name" label="设备名称" width="120" />
           <el-table-column prop="alert_time" label="告警时间" width="180" />
           <el-table-column prop="param_type" label="参数" width="100">
             <template #default="{ row }">
-              <el-tag size="small">{{ paramLabel(row.param_type) }}</el-tag>
+              <el-tag size="small" round>{{ paramLabel(row.param_type) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="value" label="当前值" width="100" />
           <el-table-column prop="threshold_value" label="阈值" width="100" />
           <el-table-column prop="severity" label="严重程度" width="100">
             <template #default="{ row }">
-              <el-tag :type="row.severity === 'critical' ? 'danger' : row.severity === 'warning' ? 'warning' : 'info'" size="small">
+              <el-tag :type="row.severity === 'critical' ? 'danger' : row.severity === 'warning' ? 'warning' : 'info'" size="small" round>
                 {{ row.severity === 'critical' ? '严重' : row.severity === 'warning' ? '警告' : '提示' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="message" label="告警信息" min-width="200" />
+          <el-table-column prop="message" label="告警信息" min-width="200" show-overflow-tooltip />
           <el-table-column prop="is_resolved" label="状态" width="100">
             <template #default="{ row }">
-              <el-tag :type="row.is_resolved ? 'success' : 'danger'" size="small">
+              <el-tag :type="row.is_resolved ? 'success' : 'danger'" size="small" round>
                 {{ row.is_resolved ? '已处理' : '未处理' }}
               </el-tag>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="100">
             <template #default="{ row }">
-              <el-button v-if="!row.is_resolved" size="small" type="success" @click="openResolveDialog(row)">
+              <el-button v-if="!row.is_resolved" link type="success" size="small" @click="openResolveDialog(row)">
                 处理
               </el-button>
             </template>
@@ -49,20 +53,22 @@
       </el-tab-pane>
 
       <el-tab-pane label="阈值配置" name="thresholds">
-        <div class="tab-header">
-          <el-select v-model="thresholdDevice" placeholder="选择设备" style="width: 200px" @change="fetchThresholds">
-            <el-option v-for="d in devices" :key="d.id" :label="d.name" :value="d.id" />
-          </el-select>
-          <el-button @click="showAddThreshold" style="margin-left: 16px" type="primary" size="small">
-            添加阈值
-          </el-button>
-        </div>
+        <Toolbar>
+          <template #left>
+            <el-select v-model="thresholdDevice" placeholder="选择设备" style="width: 200px" @change="fetchThresholds">
+              <el-option v-for="d in devices" :key="d.id" :label="d.name" :value="d.id" />
+            </el-select>
+          </template>
+          <template #right>
+            <el-button type="primary" @click="showAddThreshold" size="small">添加阈值</el-button>
+          </template>
+        </Toolbar>
 
-        <el-table :data="thresholds" border stripe v-loading="thLoading" style="margin-top: 16px">
+        <el-table :data="thresholds" border v-loading="thLoading" style="margin-top: 16px">
           <el-table-column prop="device_id" label="设备ID" width="80" />
           <el-table-column prop="param_type" label="参数类型" width="120">
             <template #default="{ row }">
-              <el-tag>{{ paramLabel(row.param_type) }}</el-tag>
+              <el-tag round>{{ paramLabel(row.param_type) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="upper_limit" label="上限" width="120" />
@@ -74,7 +80,7 @@
           </el-table-column>
           <el-table-column label="操作" width="100">
             <template #default="{ row }">
-              <el-button size="small" @click="showEditThreshold(row)">编辑</el-button>
+              <el-button link type="primary" size="small" @click="showEditThreshold(row)">编辑</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -84,22 +90,31 @@
         <div v-loading="statsLoading">
           <el-row :gutter="16">
             <el-col :span="8">
-              <div class="stat-card">
-                <div class="stat-label">告警总数</div>
-                <div class="stat-value">{{ stats.total_alerts || 0 }}<span class="unit">条</span></div>
-              </div>
+              <StatCard
+                title="告警总数"
+                :value="stats.total_alerts || 0"
+                unit="条"
+                icon="Bell"
+                color="#4f8cf7"
+              />
             </el-col>
             <el-col :span="8">
-              <div class="stat-card" style="border-left: 3px solid #f56c6c">
-                <div class="stat-label">未处理数</div>
-                <div class="stat-value">{{ stats.unresolved || 0 }}<span class="unit">条</span></div>
-              </div>
+              <StatCard
+                title="未处理数"
+                :value="stats.unresolved || 0"
+                unit="条"
+                icon="Warning"
+                color="#f5222d"
+              />
             </el-col>
             <el-col :span="8">
-              <div class="stat-card" style="border-left: 3px solid #409eff">
-                <div class="stat-label">平均响应时长</div>
-                <div class="stat-value">{{ stats.avg_response_minutes || 0 }}<span class="unit">分钟</span></div>
-              </div>
+              <StatCard
+                title="平均响应时长"
+                :value="stats.avg_response_minutes || 0"
+                unit="分钟"
+                icon="Clock"
+                color="#faad14"
+              />
             </el-col>
           </el-row>
 
@@ -128,7 +143,7 @@
     </el-tabs>
 
     <!-- 阈值编辑对话框 -->
-    <el-dialog v-model="thDialogVisible" :title="thIsEdit ? '编辑阈值' : '添加阈值'" width="450px">
+    <el-dialog v-model="thDialogVisible" :title="thIsEdit ? '编辑阈值' : '添加阈值'" width="450px" top="5vh">
       <el-form :model="thForm" label-width="100px">
         <el-form-item label="设备">
           <el-select v-model="thForm.device_id" :disabled="thIsEdit" style="width: 100%">
@@ -154,7 +169,7 @@
     </el-dialog>
 
     <!-- 处理告警对话框 -->
-    <el-dialog v-model="resolveDialogVisible" title="处理告警" width="500px">
+    <el-dialog v-model="resolveDialogVisible" title="处理告警" width="500px" top="5vh">
       <el-form :model="resolveForm" label-width="100px">
         <el-form-item label="处理人" required>
           <el-input v-model="resolveForm.handler" placeholder="请输入处理人姓名" />
@@ -166,20 +181,21 @@
 
       <!-- 知识库建议 -->
       <div v-if="suggestions.length > 0" style="margin-top: 16px">
-        <h4 style="margin-bottom: 8px; color: #303133">历史处理建议</h4>
+        <h4 style="margin-bottom: 8px; color: var(--text-secondary)">历史处理建议</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 8px">
           <el-tag
             v-for="(s, idx) in suggestions"
             :key="idx"
             style="cursor: pointer"
             type="info"
+            round
             @click="applySuggestion(s)"
           >
             {{ s.measure || s }}
           </el-tag>
         </div>
       </div>
-      <div v-else-if="suggestionsLoaded" style="margin-top: 16px; color: #909399">
+      <div v-else-if="suggestionsLoaded" style="margin-top: 16px; color: var(--text-tertiary); text-align: center; padding: 16px">
         暂无同类告警的历史处理记录
       </div>
 
@@ -199,6 +215,9 @@ import {
   getDevices, getAlertRecords, resolveAlert, getThresholds,
   updateThreshold, createThreshold, getAlertStats, getResolutionSuggestions
 } from '../api/api.js'
+import StatCard from '../components/common/StatCard.vue'
+import PageTitle from '../components/common/PageTitle.vue'
+import Toolbar from '../components/common/Toolbar.vue'
 
 const activeTab = ref('records')
 const devices = ref([])
@@ -241,6 +260,8 @@ const trendChartRef = ref(null)
 let typeChart = null
 let severityChart = null
 let trendChart = null
+
+const CHART_COLORS = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272']
 
 function paramLabel(type) {
   const map = { power: '功率', temperature: '温度', voltage: '电压', current: '电流' }
@@ -390,7 +411,6 @@ function renderTypeChart() {
   typeChart = echarts.init(typeChartRef.value)
 
   const data = stats.value.type_distribution || []
-  // 后端返回 [{type, count, label}, ...] 数组格式
   const chartData = (Array.isArray(data) ? data : []).map(d => ({
     name: d.label || paramLabel(d.type),
     value: d.count || d.value || 0,
@@ -406,10 +426,7 @@ function renderTypeChart() {
       label: { show: true, formatter: '{b}: {c}' },
       data: chartData.length > 0 ? chartData : [{ name: '暂无数据', value: 0 }],
       itemStyle: {
-        color: (params) => {
-          const colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272']
-          return colors[params.dataIndex % colors.length]
-        }
+        color: (params) => CHART_COLORS[params.dataIndex % CHART_COLORS.length]
       }
     }]
   })
@@ -421,13 +438,12 @@ function renderSeverityChart() {
   severityChart = echarts.init(severityChartRef.value)
 
   const data = stats.value.severity_distribution || []
-  // 后端返回 [{severity, count, label}, ...] 数组格式
   const chartData = (Array.isArray(data) ? data : []).map(d => ({
     name: d.label || (d.severity === 'critical' ? '严重' : d.severity === 'warning' ? '警告' : (d.severity || '未知')),
     value: d.count || d.value || 0,
   }))
 
-  const colors = { critical: '#f56c6c', warning: '#e6a23c', info: '#409eff' }
+  const COLORS = { critical: '#f5222d', warning: '#faad14', info: '#4f8cf7' }
 
   severityChart.setOption({
     tooltip: { trigger: 'item' },
@@ -438,7 +454,7 @@ function renderSeverityChart() {
       label: { show: true, formatter: '{b}: {c}' },
       data: chartData.length > 0 ? chartData : [{ name: '暂无数据', value: 0 }],
       itemStyle: {
-        color: (params) => colors[params.name === '严重' ? 'critical' : params.name === '警告' ? 'warning' : 'info'] || '#909399'
+        color: (params) => COLORS[params.name === '严重' ? 'critical' : params.name === '警告' ? 'warning' : 'info'] || '#8c8c8c'
       }
     }]
   })
@@ -464,7 +480,7 @@ function renderTrendChart() {
       data: values.length > 0 ? values : [0],
       type: 'bar',
       itemStyle: {
-        color: '#409eff',
+        color: '#4f8cf7',
         borderRadius: [4, 4, 0, 0],
       },
       barMaxWidth: 40,
@@ -495,36 +511,3 @@ onUnmounted(() => {
   disposeCharts()
 })
 </script>
-
-<style scoped>
-.tab-header {
-  display: flex;
-  align-items: center;
-}
-
-.stat-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.stat-card .stat-label {
-  font-size: 14px;
-  color: #8c8c8c;
-  margin-bottom: 8px;
-}
-
-.stat-card .stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-.stat-card .stat-value .unit {
-  font-size: 14px;
-  font-weight: 400;
-  color: #8c8c8c;
-  margin-left: 4px;
-}
-</style>

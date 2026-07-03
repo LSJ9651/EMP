@@ -5,6 +5,7 @@
 <script setup>
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
+import { COLORS, BASE_OPTIONS } from './chartTheme.js'
 
 const props = defineProps({
   series: { type: Array, default: () => [] },
@@ -12,8 +13,6 @@ const props = defineProps({
 
 const chartRef = ref(null)
 let chart = null
-
-const COLORS = ['#1890ff', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#722ed1']
 
 function initChart() {
   if (!chartRef.value) return

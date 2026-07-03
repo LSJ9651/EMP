@@ -1,6 +1,6 @@
 <template>
   <div class="reports-page">
-    <h2 class="page-title">智能报告</h2>
+    <PageTitle title="智能报告" icon="Document" />
 
     <el-tabs v-model="activeTab" type="border-card">
       <!-- ========== Tab 1: 能耗分析 ========== -->
@@ -25,15 +25,14 @@
                 <el-alert :title="analysisResult.summary" type="info" :closable="false" style="margin-bottom: 16px" />
 
                 <h4 style="margin-bottom: 8px">异常检测</h4>
-                <div v-if="analysisResult.anomalies?.length === 0" style="color: #67c23a">未检测到异常</div>
+                <div v-if="analysisResult.anomalies?.length === 0" style="color: #52c41a; padding: 8px 0">未检测到异常</div>
                 <div v-for="a in analysisResult.anomalies" :key="a.device_id" style="margin-bottom: 8px">
-                  <el-tag :type="a.severity === 'high' ? 'danger' : 'warning'" size="small" style="margin-right: 8px">
+                  <el-tag :type="a.severity === 'high' ? 'danger' : 'warning'" size="small" round style="margin-right: 8px">
                     {{ a.severity === 'high' ? '严重' : '中等' }}
                   </el-tag>
                   {{ a.message }}
                 </div>
 
-                <!-- 同环比分析 -->
                 <div v-if="analysisResult.period_comparison?.devices?.length > 0" style="margin: 16px 0">
                   <h4 style="margin-bottom: 8px">同环比分析</h4>
                   <el-table :data="analysisResult.period_comparison.devices" border size="small" style="width: 100%">
@@ -42,16 +41,16 @@
                     <el-table-column prop="previous_energy_kwh" label="上期能耗(kWh)" />
                     <el-table-column label="变化率">
                       <template #default="{ row }">
-                        <span :style="{ color: row.ratio_pct >= 100 ? '#f56c6c' : '#67c23a', fontWeight: 'bold' }">
+                        <span :style="{ color: row.ratio_pct >= 100 ? '#f5222d' : '#52c41a', fontWeight: 'bold' }">
                           {{ row.ratio_pct }}%
                         </span>
                       </template>
                     </el-table-column>
                     <el-table-column label="趋势">
                       <template #default="{ row }">
-                        <el-tag v-if="row.trend === 'up'" type="danger" size="small">↑ 上升</el-tag>
-                        <el-tag v-else-if="row.trend === 'down'" type="success" size="small">↓ 下降</el-tag>
-                        <el-tag v-else type="info" size="small">→ 持平</el-tag>
+                        <el-tag v-if="row.trend === 'up'" type="danger" size="small" round>↑ 上升</el-tag>
+                        <el-tag v-else-if="row.trend === 'down'" type="success" size="small" round>↓ 下降</el-tag>
+                        <el-tag v-else type="info" size="small" round>→ 持平</el-tag>
                       </template>
                     </el-table-column>
                     <el-table-column prop="delta_kwh" label="差值(kWh)" />
@@ -59,9 +58,12 @@
                 </div>
 
                 <h4 style="margin: 16px 0 8px">节能建议</h4>
-                <el-tag v-for="(s, i) in analysisResult.suggestions" :key="i" effect="plain" style="margin: 0 8px 8px 0">
-                  {{ s }}
-                </el-tag>
+                <div v-if="analysisResult.suggestions?.length > 0">
+                  <el-tag v-for="(s, i) in analysisResult.suggestions" :key="i" effect="plain" style="margin: 0 8px 8px 0">
+                    {{ s }}
+                  </el-tag>
+                </div>
+                <div v-else style="color: var(--text-tertiary); padding: 8px 0">暂无建议</div>
               </div>
             </el-card>
           </el-col>
@@ -80,15 +82,9 @@
                 </div>
               </template>
 
-              <!-- 筛选条件区域 -->
               <div class="report-filter-bar">
                 <el-select v-model="selectedDeviceId" placeholder="按设备筛选" clearable style="width: 100%; margin-bottom: 8px" @change="onDeviceFilterChange">
-                  <el-option
-                    v-for="d in devices"
-                    :key="d.id"
-                    :label="d.name"
-                    :value="d.id"
-                  />
+                  <el-option v-for="d in devices" :key="d.id" :label="d.name" :value="d.id" />
                 </el-select>
                 <el-input
                   v-model="deviceNameFilter"
@@ -102,7 +98,6 @@
                     <el-icon style="cursor: pointer" @click="fetchReports()"><Search /></el-icon>
                   </template>
                 </el-input>
-                <!-- 时间范围筛选 -->
                 <el-date-picker
                   v-model="reportDateRange"
                   type="daterange"
@@ -121,54 +116,29 @@
                 </el-select>
               </div>
 
-              <!-- 激活筛选条件标签 -->
               <div v-if="reportType || selectedDeviceId || deviceNameFilter || reportDateRange" class="active-filters">
-                <el-tag
-                  v-if="reportDateRange"
-                  closable
-                  size="small"
-                  type="danger"
-                  @close="reportDateRange = null; fetchReports()"
-                >
+                <el-tag v-if="reportDateRange" closable size="small" type="danger" round @close="reportDateRange = null; fetchReports()">
                   时间: {{ reportDateRange[0] }} ~ {{ reportDateRange[1] }}
                 </el-tag>
-                <el-tag
-                  v-if="selectedDeviceId"
-                  closable
-                  size="small"
-                  type="primary"
-                  @close="selectedDeviceId = null; fetchReports()"
-                >
+                <el-tag v-if="selectedDeviceId" closable size="small" type="primary" round @close="selectedDeviceId = null; fetchReports()">
                   设备: {{ getDeviceNameById(selectedDeviceId) }}
                 </el-tag>
-                <el-tag
-                  v-if="deviceNameFilter"
-                  closable
-                  size="small"
-                  type="warning"
-                  @close="deviceNameFilter = ''; fetchReports()"
-                >
+                <el-tag v-if="deviceNameFilter" closable size="small" type="warning" round @close="deviceNameFilter = ''; fetchReports()">
                   名称: {{ deviceNameFilter }}
                 </el-tag>
-                <el-tag
-                  v-if="reportType"
-                  closable
-                  size="small"
-                  type="success"
-                  @close="reportType = ''; fetchReports()"
-                >
+                <el-tag v-if="reportType" closable size="small" type="success" round @close="reportType = ''; fetchReports()">
                   类型: {{ reportType === 'analysis' ? '能耗分析' : '调度优化' }}
                 </el-tag>
               </div>
 
               <div v-loading="reportLoading" class="report-list-container">
                 <div v-if="reports.length === 0" class="report-empty">
-                  <el-icon :size="32" color="#c0c4cc"><Document /></el-icon>
+                  <el-icon :size="32" color="var(--text-placeholder)"><Document /></el-icon>
                   <p>{{ activeFiltersCount > 0 ? '未找到匹配的报告' : '暂无报告' }}</p>
                 </div>
                 <div v-for="r in reports" :key="r.id" class="report-item" @click="selectReport(r)">
                   <div class="report-header">
-                    <el-tag :type="r.report_type === 'analysis' ? 'primary' : 'success'" size="small">
+                    <el-tag :type="r.report_type === 'analysis' ? 'primary' : 'success'" size="small" round>
                       {{ r.report_type === 'analysis' ? '能耗分析' : '调度优化' }}
                     </el-tag>
                     <span class="report-time">{{ r.created_at }}</span>
@@ -177,7 +147,6 @@
                 </div>
               </div>
 
-              <!-- 分页控件 -->
               <div v-if="reportTotalPages > 1" class="report-pagination">
                 <el-pagination
                   v-model:current-page="reportPage"
@@ -195,20 +164,16 @@
 
       <!-- ========== Tab 2: 订阅管理 ========== -->
       <el-tab-pane label="订阅管理" name="subscription">
-        <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px">
-          <el-button type="primary" @click="openCreateDialog">
-            <el-icon><Plus /></el-icon>新建订阅
-          </el-button>
-        </div>
+        <Toolbar>
+          <template #left>
+            <el-button type="primary" @click="openCreateDialog">
+              <el-icon><Plus /></el-icon>新建订阅
+            </el-button>
+          </template>
+        </Toolbar>
 
-        <!-- 全局执行状态栏 -->
         <transition name="status-fade">
-          <div
-            v-if="executingRows.size > 0"
-            class="execution-status-bar"
-            role="status"
-            aria-live="polite"
-          >
+          <div v-if="executingRows.size > 0" class="execution-status-bar" role="status" aria-live="polite">
             <el-icon class="is-loading" :size="16"><Loading /></el-icon>
             <span>
               正在执行：<strong>{{ executingRows.size }}</strong> 个订阅任务，
@@ -217,28 +182,28 @@
           </div>
         </transition>
 
-        <el-table :data="subscriptions" border v-loading="subLoading" style="width: 100%">
+        <el-table :data="subscriptions" border style="width: 100%">
           <el-table-column prop="name" label="名称" min-width="100" />
           <el-table-column label="报告类型" width="100">
             <template #default="{ row }">
-              <el-tag v-if="row.report_type === 'daily'" type="primary" size="small">日报</el-tag>
-              <el-tag v-else-if="row.report_type === 'weekly'" type="warning" size="small">周报</el-tag>
-              <el-tag v-else type="info" size="small">分析报告</el-tag>
+              <el-tag v-if="row.report_type === 'daily'" type="primary" size="small" round>日报</el-tag>
+              <el-tag v-else-if="row.report_type === 'weekly'" type="warning" size="small" round>周报</el-tag>
+              <el-tag v-else type="info" size="small" round>分析报告</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="cron_time" label="执行时间" width="100" />
           <el-table-column label="通知方式" width="140">
             <template #default="{ row }">
-              <span>
+              <span style="font-size: 13px">
                 {{ row.notify_method === 'system' ? '系统通知' : row.notify_method === 'email' ? '邮件' : '钉钉' }}
               </span>
-              <el-tag v-if="row.notify_method !== 'system' && row.notify_config" size="small" type="success" style="margin-left: 4px">已配置</el-tag>
-              <el-tag v-else-if="row.notify_method !== 'system' && !row.notify_config" size="small" type="warning" style="margin-left: 4px">未配置</el-tag>
+              <el-tag v-if="row.notify_method !== 'system' && row.notify_config" size="small" type="success" round style="margin-left: 4px">已配置</el-tag>
+              <el-tag v-else-if="row.notify_method !== 'system' && !row.notify_config" size="small" type="warning" round style="margin-left: 4px">未配置</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="订阅状态" width="90">
             <template #default="{ row }">
-              <el-tag :type="row.is_active ? 'success' : 'info'" size="small">
+              <el-tag :type="row.is_active ? 'success' : 'info'" size="small" round>
                 {{ row.is_active ? '启用' : '禁用' }}
               </el-tag>
             </template>
@@ -252,22 +217,22 @@
             <template #default="{ row }">
               <template v-if="executingRows.has(row.id)">
                 <el-progress :percentage="executionProgress.get(row.id) || 30" :stroke-width="4" :show-text="false" style="width: 80px; display: inline-block; vertical-align: middle" />
-                <span style="font-size: 12px; color: #409eff; margin-left: 4px">执行中</span>
+                <span style="font-size: 12px; color: var(--brand-primary); margin-left: 4px">执行中</span>
               </template>
               <template v-else-if="executionResults.has(row.id)">
-                <span v-if="executionResults.get(row.id).success" class="exec-status-success" role="img" aria-label="执行成功">
-                  <el-icon color="#67c23a"><CircleCheck /></el-icon>
-                  <a href="javascript:void(0)" @click="viewExecutionResult(row.id)" style="font-size: 12px; margin-left: 2px; color: #409eff">查看结果</a>
+                <span v-if="executionResults.get(row.id).success">
+                  <el-icon color="#52c41a"><CircleCheck /></el-icon>
+                  <a href="javascript:void(0)" @click="viewExecutionResult(row.id)" style="font-size: 12px; margin-left: 2px; color: var(--brand-primary)">查看结果</a>
                 </span>
-                <span v-else class="exec-status-fail" role="img" aria-label="执行失败">
-                  <el-icon color="#f56c6c"><CircleClose /></el-icon>
+                <span v-else>
+                  <el-icon color="#f5222d"><CircleClose /></el-icon>
                   <el-tooltip :content="executionResults.get(row.id).error" placement="top">
-                    <span style="font-size: 12px; color: #f56c6c; margin-left: 2px; cursor: help">失败</span>
+                    <span style="font-size: 12px; color: #f5222d; margin-left: 2px; cursor: help">失败</span>
                   </el-tooltip>
                 </span>
               </template>
               <template v-else>
-                <span style="color: #c0c4cc; font-size: 12px">—</span>
+                <span style="color: var(--text-placeholder); font-size: 12px">—</span>
               </template>
             </template>
           </el-table-column>
@@ -282,7 +247,6 @@
                 @click="handleRun(row)"
                 :loading="executingRows.has(row.id)"
                 :disabled="executingRows.has(row.id)"
-                :aria-label="executingRows.has(row.id) ? `正在执行 ${row.name}` : `立即执行 ${row.name}`"
               >
                 {{ executingRows.has(row.id) ? '执行中...' : '立即执行' }}
               </el-button>
@@ -296,7 +260,7 @@
         </el-table>
 
         <!-- 新建/编辑订阅对话框 -->
-        <el-dialog v-model="subDialogVisible" :title="isEditing ? '编辑订阅' : '新建订阅'" width="500px">
+        <el-dialog v-model="subDialogVisible" :title="isEditing ? '编辑订阅' : '新建订阅'" width="500px" top="5vh">
           <el-form :model="subForm" label-width="100px">
             <el-form-item label="名称">
               <el-input v-model="subForm.name" placeholder="请输入订阅名称" />
@@ -318,11 +282,9 @@
                 <el-option label="钉钉" value="dingtalk" />
               </el-select>
             </el-form-item>
-            <!-- 邮件配置 -->
             <el-form-item v-if="subForm.notify_method === 'email'" label="邮件配置">
               <EmailNotifyConfig ref="emailConfigRef" v-model="subForm.notify_config" />
             </el-form-item>
-            <!-- 钉钉配置 -->
             <el-form-item v-if="subForm.notify_method === 'dingtalk'" label="钉钉配置">
               <DingtalkNotifyConfig ref="dingtalkConfigRef" v-model="subForm.notify_config" />
             </el-form-item>
@@ -342,16 +304,15 @@
         </el-dialog>
 
         <!-- 订阅报告查看对话框 -->
-        <el-dialog v-model="subReportDialogVisible" width="800px" :close-on-click-modal="false">
+        <el-dialog v-model="subReportDialogVisible" width="800px" :close-on-click-modal="false" top="5vh">
           <template #header>
             <div style="display: flex; align-items: center; gap: 12px">
               <h3 style="margin: 0">📊 订阅报告：{{ selectedSubscription?.name }}</h3>
-              <el-tag :type="selectedSubscription?.is_active ? 'success' : 'info'" size="small">
+              <el-tag :type="selectedSubscription?.is_active ? 'success' : 'info'" size="small" round>
                 {{ selectedSubscription?.is_active ? '启用中' : '已禁用' }}
               </el-tag>
             </div>
           </template>
-          <!-- 子筛选栏 -->
           <div class="sub-report-filter">
             <el-date-picker
               v-model="subReportDateRange"
@@ -365,26 +326,25 @@
               style="width: 260px"
               @change="fetchSubReports"
             />
-            <span style="margin-left: 12px; font-size: 13px; color: #909399">
+            <span style="margin-left: 12px; font-size: 13px; color: var(--text-tertiary)">
               共 {{ subReportTotal }} 条报告
             </span>
           </div>
           <div v-loading="subReportLoading" style="min-height: 200px; max-height: 460px; overflow-y: auto">
-            <div v-if="subReports.length === 0" style="text-align: center; padding: 48px; color: #c0c4cc">
+            <div v-if="subReports.length === 0" style="text-align: center; padding: 48px; color: var(--text-placeholder)">
               <el-icon :size="32"><Document /></el-icon>
               <p style="margin-top: 8px">该订阅暂无生成的报告</p>
             </div>
             <div v-for="r in subReports" :key="r.id" class="sub-report-item" @click="selectSubReport(r)">
               <div class="sub-report-header">
-                <el-tag :type="r.report_type === 'analysis' ? 'primary' : 'success'" size="small">
+                <el-tag :type="r.report_type === 'analysis' ? 'primary' : 'success'" size="small" round>
                   {{ r.report_type === 'analysis' ? '能耗分析' : '调度优化' }}
                 </el-tag>
-                <span style="font-size: 12px; color: #909399">{{ r.created_at }}</span>
+                <span style="font-size: 12px; color: var(--text-tertiary)">{{ r.created_at }}</span>
               </div>
-              <div style="font-size: 13px; color: #606266; margin-top: 4px">{{ r.input_summary }}</div>
+              <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px">{{ r.input_summary }}</div>
             </div>
           </div>
-          <!-- 订阅报告分页 -->
           <div v-if="subReportTotalPages > 1" style="display: flex; justify-content: center; margin-top: 12px">
             <el-pagination
               v-model:current-page="subReportPage"
@@ -399,13 +359,13 @@
       </el-tab-pane>
     </el-tabs>
 
-    <!-- ════════ 报告详情对话框（正式报告视图）════════ -->
+    <!-- ════════ 报告详情对话框 ════════ -->
     <el-dialog v-model="detailVisible" width="920px" top="2vh" class="report-detail-dialog" :close-on-click-modal="false">
       <template #header>
         <div class="rd-header">
           <div>
             <h2 class="rd-title">
-              <el-tag :type="selectedReport?.report_type === 'analysis' ? 'primary' : 'success'" size="large" style="margin-right: 10px">
+              <el-tag :type="selectedReport?.report_type === 'analysis' ? 'primary' : 'success'" size="large" style="margin-right: 10px" round>
                 {{ selectedReport?.report_type === 'analysis' ? '能耗分析报告' : '调度优化报告' }}
               </el-tag>
             </h2>
@@ -422,7 +382,6 @@
       </template>
 
       <div v-if="selectedReport" class="report-detail-body" ref="reportPrintEl">
-        <!-- 报告元数据栏 -->
         <div class="rd-meta">
           <div class="rd-meta-item">
             <span class="label">触发方式</span>
@@ -439,23 +398,19 @@
           <div class="rd-meta-item">
             <span class="label">分析模式</span>
             <span class="value">
-              <el-tag :type="reportMode === 'cloud' ? '' : 'info'" size="small" effect="plain">
+              <el-tag :type="reportMode === 'cloud' ? '' : 'info'" size="small" effect="plain" round>
                 {{ reportMode === 'cloud' ? '☁ 云端智能' : '💻 本地规则' }}
               </el-tag>
             </span>
           </div>
         </div>
 
-        <!-- ══ 原始JSON视图 ══ -->
         <template v-if="showRawJson">
           <pre class="report-json">{{ JSON.stringify(selectedReport.output_json, null, 2) }}</pre>
         </template>
 
-        <!-- ══ 格式化报告视图 ══ -->
         <template v-else>
-          <!-- ===== 能耗分析报告 ===== -->
           <template v-if="selectedReport.report_type === 'analysis'">
-            <!-- Section 1: 分析摘要 -->
             <div class="rp-section">
               <h3 class="rp-section-title">
                 <span class="rp-section-icon">📋</span>分析摘要
@@ -465,7 +420,6 @@
               </div>
             </div>
 
-            <!-- Section 2: 关键指标卡片 -->
             <div class="rp-section">
               <h3 class="rp-section-title">
                 <span class="rp-section-icon">📊</span>关键指标
@@ -501,7 +455,6 @@
               </el-row>
             </div>
 
-            <!-- Section 3: 异常检测详情 -->
             <div class="rp-section" v-if="anomalyCount > 0">
               <h3 class="rp-section-title">
                 <span class="rp-section-icon">⚠️</span>异常检测 ({{ anomalyCount }}项)
@@ -512,6 +465,7 @@
                     :type="a.severity === 'high' ? 'danger' : a.severity === 'medium' ? 'warning' : 'info'"
                     size="small"
                     effect="dark"
+                    round
                   >
                     {{ a.severity === 'high' ? '严重' : a.severity === 'medium' ? '中等' : '提示' }}
                   </el-tag>
@@ -520,60 +474,9 @@
                 <p class="anomaly-msg">{{ a.message }}</p>
               </div>
             </div>
-            <div class="rp-section rp-section-ok" v-else>
-              <h3 class="rp-section-title">
-                <span class="rp-section-icon">✅</span>异常检测
-              </h3>
-              <div class="rp-no-data-happy">
-                未检测到异常，设备运行状态良好
-              </div>
-            </div>
-
-            <!-- Section 4: 同环比分析 -->
-            <div class="rp-section" v-if="reportData.period_comparison?.devices?.length > 0">
-              <h3 class="rp-section-title">
-                <span class="rp-section-icon">📈</span>同环比分析
-              </h3>
-              <el-table :data="reportData.period_comparison.devices" border size="small" style="width: 100%">
-                <el-table-column prop="device_name" label="设备" min-width="100" />
-                <el-table-column prop="current_energy_kwh" label="当期能耗(kWh)" min-width="110" />
-                <el-table-column prop="previous_energy_kwh" label="上期能耗(kWh)" min-width="110" />
-                <el-table-column label="变化率" min-width="90">
-                  <template #default="{ row }">
-                    <span :style="{ color: row.ratio_pct >= 100 ? '#f56c6c' : '#67c23a', fontWeight: 'bold' }">
-                      {{ row.ratio_pct }}%
-                    </span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="趋势" min-width="90">
-                  <template #default="{ row }">
-                    <el-tag v-if="row.trend === 'up'" type="danger" size="small">↑ 上升</el-tag>
-                    <el-tag v-else-if="row.trend === 'down'" type="success" size="small">↓ 下降</el-tag>
-                    <el-tag v-else type="info" size="small">→ 持平</el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="delta_kwh" label="差值(kWh)" min-width="100" />
-              </el-table>
-            </div>
-
-            <!-- Section 5: 节能建议 -->
-            <div class="rp-section">
-              <h3 class="rp-section-title">
-                <span class="rp-section-icon">💡</span>节能建议
-              </h3>
-              <div v-if="reportData.suggestions?.length > 0">
-                <div v-for="(s, i) in reportData.suggestions" :key="i" class="rp-suggestion-item">
-                  <span class="sugg-num">{{ i + 1 }}</span>
-                  <span class="sugg-text">{{ s }}</span>
-                </div>
-              </div>
-              <div v-else class="rp-no-data">暂无建议</div>
-            </div>
           </template>
 
-          <!-- ===== 调度优化报告 ===== -->
           <template v-else>
-            <!-- Section: 优化推理 -->
             <div class="rp-section">
               <h3 class="rp-section-title">
                 <span class="rp-section-icon">🧠</span>优化推理
@@ -583,7 +486,6 @@
               </div>
             </div>
 
-            <!-- Section: 关键指标 -->
             <div class="rp-section">
               <h3 class="rp-section-title">
                 <span class="rp-section-icon">📊</span>关键指标
@@ -591,9 +493,7 @@
               <el-row :gutter="16">
                 <el-col :sm="8" :xs="24">
                   <div class="rp-kpi-card rp-kpi-ok">
-                    <div class="kpi-value">
-                      ¥{{ reportData.estimated_cost_saved ?? '-' }}
-                    </div>
+                    <div class="kpi-value">¥{{ reportData.estimated_cost_saved ?? '-' }}</div>
                     <div class="kpi-label">预计节省成本</div>
                   </div>
                 </el-col>
@@ -606,7 +506,6 @@
               </el-row>
             </div>
 
-            <!-- Section: 调度计划表 -->
             <div class="rp-section" v-if="reportData.schedule?.length > 0">
               <h3 class="rp-section-title">
                 <span class="rp-section-icon">📅</span>调度计划
@@ -617,7 +516,7 @@
                 <el-table-column prop="end" label="结束" min-width="80" />
                 <el-table-column label="动作" min-width="80">
                   <template #default="{ row }">
-                    <el-tag :type="row.action === 'run' ? 'success' : 'warning'" size="small" effect="dark">
+                    <el-tag :type="row.action === 'run' ? 'success' : 'warning'" size="small" effect="dark" round>
                       {{ row.action === 'run' ? '运行' : '待机' }}
                     </el-tag>
                   </template>
@@ -647,6 +546,8 @@ import {
 } from '../api/api.js'
 import EmailNotifyConfig from '../components/config/EmailNotifyConfig.vue'
 import DingtalkNotifyConfig from '../components/config/DingtalkNotifyConfig.vue'
+import PageTitle from '../components/common/PageTitle.vue'
+import Toolbar from '../components/common/Toolbar.vue'
 
 const activeTab = ref('analysis')
 const devices = ref([])
@@ -666,81 +567,75 @@ const analysisResult = ref(null)
 const analyzeForm = ref({ device_id: null })
 
 const detailVisible = ref(false)
-  const selectedReport = ref(null)
-  const showRawJson = ref(false)       // 原始JSON / 格式化视图切换
-  const reportPrintEl = ref(null)
+const selectedReport = ref(null)
+const showRawJson = ref(false)
+const reportPrintEl = ref(null)
 
-  // 报告展示计算属性
-  const reportData = computed(() => {
-    return selectedReport.value?.output_json || {}
-  })
-  const reportTimeRange = computed(() => {
-    return reportData.value.time_range || ''
-  })
-  const reportMode = computed(() => {
-    // 优先读取 _mode（系统内部标记），其次 mode（兼容旧数据）
-    return reportData.value._mode || reportData.value.mode || 'unknown'
-  })
-  const anomalyCount = computed(() => {
-    return reportData.value.anomalies?.length || 0
-  })
+const reportData = computed(() => {
+  return selectedReport.value?.output_json || {}
+})
+const reportTimeRange = computed(() => {
+  return reportData.value.time_range || ''
+})
+const reportMode = computed(() => {
+  return reportData.value._mode || reportData.value.mode || 'unknown'
+})
+const anomalyCount = computed(() => {
+  return reportData.value.anomalies?.length || 0
+})
 
 const route = useRoute()
-  const router = useRouter()
+const router = useRouter()
 
-  // 计算当前激活的筛选条件数量
-  const activeFiltersCount = computed(() => {
-    let n = 0
-    if (reportType.value) n++
-    if (selectedDeviceId.value) n++
-    if (deviceNameFilter.value) n++
-    if (reportDateRange.value) n++
-    return n
-  })
+const activeFiltersCount = computed(() => {
+  let n = 0
+  if (reportType.value) n++
+  if (selectedDeviceId.value) n++
+  if (deviceNameFilter.value) n++
+  if (reportDateRange.value) n++
+  return n
+})
 
-  // ===== 订阅执行状态管理 =====
-  const executingRows = reactive(new Set())         // 正在执行的订阅ID集合
-  const executionProgress = reactive(new Map())     // 每个订阅的执行进度 0-100
-  const executionResults = reactive(new Map())      // 执行结果缓存 { success, report_id, error }
-  const currentExecutionStage = ref('')             // 当前全局执行阶段描述
-  let executionTimer = null                         // 进度模拟定时器
+// ===== 订阅执行状态管理 =====
+const executingRows = reactive(new Set())
+const executionProgress = reactive(new Map())
+const executionResults = reactive(new Map())
+const currentExecutionStage = ref('')
+let executionTimer = null
 
-  // 清理执行进度定时器
-  function clearExecutionTimer() {
-    if (executionTimer) {
-      clearInterval(executionTimer)
-      executionTimer = null
+function clearExecutionTimer() {
+  if (executionTimer) {
+    clearInterval(executionTimer)
+    executionTimer = null
+  }
+}
+
+function startProgressSim(subId) {
+  executionProgress.set(subId, 5)
+  currentExecutionStage.value = '数据采集中...'
+  let progress = 5
+  clearExecutionTimer()
+  executionTimer = setInterval(() => {
+    if (progress < 60) {
+      progress += Math.random() * 8 + 2
+      currentExecutionStage.value = progress < 25 ? '数据采集中...' : 'AI 分析计算中...'
+    } else if (progress < 90) {
+      progress += Math.random() * 3 + 1
+      currentExecutionStage.value = '结果汇总中...'
     }
-  }
+    if (progress >= 99) {
+      progress = 99
+      clearExecutionTimer()
+    }
+    executionProgress.set(subId, Math.min(99, Math.floor(progress)))
+  }, 800)
+}
 
-  // 模拟执行进度（后端无真实进度推送，用定时器模拟给用户视觉反馈）
-  function startProgressSim(subId) {
-    executionProgress.set(subId, 5)
-    currentExecutionStage.value = '数据采集中...'
-    let progress = 5
-    clearExecutionTimer()
-    executionTimer = setInterval(() => {
-      if (progress < 60) {
-        progress += Math.random() * 8 + 2
-        currentExecutionStage.value = progress < 25 ? '数据采集中...' : 'AI 分析计算中...'
-      } else if (progress < 90) {
-        progress += Math.random() * 3 + 1
-        currentExecutionStage.value = '结果汇总中...'
-      }
-      if (progress >= 99) {
-        progress = 99
-        clearExecutionTimer()
-      }
-      executionProgress.set(subId, Math.min(99, Math.floor(progress)))
-    }, 800)
-  }
-
-  // 进度直接完成（API 返回时调用）
-  function finishProgress(subId) {
-    clearExecutionTimer()
-    executionProgress.set(subId, 100)
-    currentExecutionStage.value = ''
-  }
+function finishProgress(subId) {
+  clearExecutionTimer()
+  executionProgress.set(subId, 100)
+  currentExecutionStage.value = ''
+}
 
 // ===== 订阅管理 =====
 const subscriptions = ref([])
@@ -771,7 +666,6 @@ const subForm = ref({
   is_active: true,
 })
 
-// 子组件 refs（邮件/钉钉配置验证）
 const emailConfigRef = ref(null)
 const dingtalkConfigRef = ref(null)
 
@@ -810,9 +704,7 @@ function onDateRangeChange() {
   fetchReports()
 }
 
-// 设备筛选变更
 function onDeviceFilterChange() {
-  // 选择设备时清除名称搜索（互斥逻辑）
   if (selectedDeviceId.value) {
     deviceNameFilter.value = ''
   }
@@ -823,7 +715,6 @@ function onDeviceNameFilterClear() {
   fetchReports()
 }
 
-// 一键清除所有筛选
 function resetReportFilters() {
   reportType.value = ''
   selectedDeviceId.value = null
@@ -833,7 +724,6 @@ function resetReportFilters() {
   fetchReports()
 }
 
-// 根据设备ID获取设备名称
 function getDeviceNameById(id) {
   const d = devices.value.find(d => d.id === id)
   return d ? d.name : `#${id}`
@@ -860,11 +750,10 @@ async function runAnalysis() {
 
 function selectReport(r) {
   selectedReport.value = r
-  showRawJson.value = false   // 默认展示格式化视图
+  showRawJson.value = false
   detailVisible.value = true
 }
 
-// 格式化触发方式来源
 function formatTriggerSource(summary) {
   if (!summary) return '手动分析'
   if (summary.includes('subscription_manual') || summary.includes('subscription_id') && !summary.includes('scheduled')) return '📌 订阅手动执行'
@@ -873,7 +762,6 @@ function formatTriggerSource(summary) {
   return summary
 }
 
-// 打印报告（独立窗口）
 function printReport() {
   if (!reportPrintEl.value) return
   const win = window.open('', '_blank', 'width=900,height=700')
@@ -900,7 +788,6 @@ async function fetchSubscriptions() {
   try {
     const res = await getSubscriptions()
     if (res.code === 200) {
-      // 兼容新旧响应格式
       subscriptions.value = res.data.items || res.data || []
     }
   } finally { subLoading.value = false }
@@ -937,14 +824,12 @@ function openEditDialog(row) {
 }
 
 function onNotifyMethodChange(val) {
-  // 切换通知方式时清空配置，避免残留旧配置
   subForm.value.notify_config = {}
 }
 
 async function handleSaveSub() {
   subSaving.value = true
   try {
-    // 验证子组件配置
     if (subForm.value.notify_method === 'email' && emailConfigRef.value) {
       const valid = await emailConfigRef.value.validate()
       if (!valid) {
@@ -970,7 +855,6 @@ async function handleSaveSub() {
       notify_method: subForm.value.notify_method,
       is_active: subForm.value.is_active,
     }
-    // 仅非 system 通知方式才携带配置
     if (subForm.value.notify_method !== 'system') {
       payload.notify_config = subForm.value.notify_config
     }
@@ -989,13 +873,8 @@ async function handleSaveSub() {
 }
 
 async function handleRun(row) {
-  // 防止重复执行
   if (executingRows.has(row.id)) return
-
-  // 清除该行之前的结果缓存
   executionResults.delete(row.id)
-
-  // 标记为执行中
   executingRows.add(row.id)
   startProgressSim(row.id)
 
@@ -1009,7 +888,6 @@ async function handleRun(row) {
         reportId: res.data?.report_id || null,
         error: null,
       })
-      // 自动刷新订阅列表（更新 last_run_at）
       await fetchSubscriptions()
       ElMessage.success(`「${row.name}」执行完成`)
     } else {
@@ -1031,21 +909,18 @@ async function handleRun(row) {
     ElMessage.error(`「${row.name}」执行失败: ${errMsg}`)
   } finally {
     executingRows.delete(row.id)
-    // 延迟清理进度（保留100%完成态展示1.5秒）
     setTimeout(() => {
       executionProgress.delete(row.id)
     }, 1500)
   }
 }
 
-// 查看执行结果：跳转至分析 Tab 并定位报告
 function viewExecutionResult(subId) {
   const result = executionResults.get(subId)
   if (result && result.reportId) {
     activeTab.value = 'analysis'
     router.push({ path: '/reports', query: { report_id: result.reportId, tab: 'analysis' } })
   } else {
-    // 无 report_id 时仅切换到分析 Tab
     activeTab.value = 'analysis'
   }
 }
@@ -1061,7 +936,6 @@ async function handleDelete(id) {
 }
 
 // ========== 订阅报告查看 ==========
-
 function viewSubReports(sub) {
   selectedSubscription.value = sub
   subReportDateRange.value = null
@@ -1100,7 +974,6 @@ async function fetchSubReports() {
 
 function selectSubReport(r) {
   subReportDialogVisible.value = false
-  // 直接打开报告详情
   selectedReport.value = {
     ...r,
     output_json: r.output_json || {},
@@ -1114,7 +987,6 @@ onMounted(async () => {
   await fetchReports()
   await fetchSubscriptions()
 
-  // 从通知跳转：自动定位到指定报告
   const qTab = route.query.tab
   const qReportId = route.query.report_id
   if (qTab) activeTab.value = qTab
@@ -1126,14 +998,12 @@ onMounted(async () => {
   }
 })
 
-// 切换至订阅管理 tab 时自动刷新订阅列表
 watch(activeTab, (newTab) => {
   if (newTab === 'subscription') {
     fetchSubscriptions()
   }
 })
 
-// 组件卸载时清理执行进度定时器
 onUnmounted(() => {
   clearExecutionTimer()
 })
@@ -1149,7 +1019,7 @@ onUnmounted(() => {
   margin-bottom: 12px;
   background: #ecf5ff;
   border: 1px solid #b3d8ff;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   color: #303133;
 }
@@ -1162,15 +1032,6 @@ onUnmounted(() => {
 .status-fade-leave-to {
   opacity: 0;
   transform: translateY(-8px);
-}
-
-/* ──── 执行状态列 ──── */
-.exec-status-success,
-.exec-status-fail {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 12px;
 }
 
 /* ──── 报告筛选 ──── */
@@ -1199,14 +1060,14 @@ onUnmounted(() => {
 
 .report-item {
   padding: 12px;
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .report-item:hover {
-  border-color: #409eff;
+  border-color: var(--brand-primary);
   background: #ecf5ff;
 }
 .report-header {
@@ -1217,17 +1078,17 @@ onUnmounted(() => {
 }
 .report-time {
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--text-placeholder);
 }
 .report-summary {
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
 }
 
 .report-empty {
   text-align: center;
   padding: 32px;
-  color: #c0c4cc;
+  color: var(--text-placeholder);
 }
 
 /* ════════ 正式报告视图样式 ════════ */
@@ -1239,7 +1100,6 @@ onUnmounted(() => {
 }
 .rd-title {
   margin: 0;
-  font-size: 18px;
   display: flex;
   align-items: center;
 }
@@ -1256,8 +1116,8 @@ onUnmounted(() => {
   flex-wrap: wrap;
   gap: 16px 32px;
   padding: 12px 16px;
-  background: #fafafa;
-  border-radius: 8px;
+  background: var(--surface-bg);
+  border-radius: var(--radius-md);
   margin-bottom: 20px;
   font-size: 13px;
 }
@@ -1268,7 +1128,7 @@ onUnmounted(() => {
 }
 .rd-meta-item .label {
   font-size: 11px;
-  color: #909399;
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1288,26 +1148,26 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding-bottom: 8px;
-  border-bottom: 2px solid #409eff;
+  border-bottom: 2px solid var(--brand-primary);
 }
 .rp-section-icon {
   font-size: 16px;
 }
 .rp-section-ok .rp-section-title {
-  border-bottom-color: #67c23a;
+  border-bottom-color: #52c41a;
 }
 .rp-summary-box {
   background: #f0f9ff;
   border: 1px solid #b3d8ff;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 14px 18px;
   font-size: 14px;
   line-height: 1.7;
   color: #1d4ed8;
 }
 .rp-kpi-card {
-  background: #f4f4f5;
-  border-radius: 8px;
+  background: var(--surface-bg);
+  border-radius: var(--radius-md);
   padding: 16px;
   text-align: center;
   margin-bottom: 12px;
@@ -1330,27 +1190,27 @@ onUnmounted(() => {
 .kpi-unit {
   font-size: 14px;
   font-weight: 400;
-  color: #909399;
+  color: var(--text-tertiary);
   margin-left: 4px;
 }
 .kpi-label {
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
   margin: 6px 0 10px;
 }
 .rp-anomaly-item {
   padding: 12px 16px;
-  border-left: 4px solid #e6a23c;
+  border-left: 4px solid #faad14;
   background: #fdf6ec;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   margin-bottom: 10px;
 }
 .rp-anomaly-item.severity-high {
-  border-left-color: #f56c6c;
+  border-left-color: #f5222d;
   background: #fef0f0;
 }
 .rp-anomaly-item.severity-info {
-  border-left-color: #409eff;
+  border-left-color: var(--brand-primary);
   background: #ecf5ff;
 }
 .anomaly-header {
@@ -1361,7 +1221,7 @@ onUnmounted(() => {
 }
 .anomaly-device {
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 .anomaly-msg {
@@ -1376,15 +1236,15 @@ onUnmounted(() => {
   gap: 10px;
   padding: 10px 14px;
   margin-bottom: 8px;
-  background: #f9fafb;
-  border-radius: 6px;
+  background: var(--surface-bg);
+  border-radius: var(--radius-sm);
 }
 .sugg-num {
   flex-shrink: 0;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #409eff;
+  background: var(--brand-primary);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
@@ -1400,27 +1260,27 @@ onUnmounted(() => {
 .rp-no-data {
   text-align: center;
   padding: 16px;
-  color: #909399;
+  color: var(--text-tertiary);
   font-size: 13px;
 }
 .rp-no-data-happy {
   text-align: center;
   padding: 20px;
-  color: #67c23a;
+  color: #52c41a;
   font-size: 14px;
   font-weight: 500;
   background: #f0fdf4;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 .report-json {
-  background: #f5f7fa;
+  background: var(--surface-bg);
   padding: 16px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
   max-height: 520px;
   overflow-y: auto;
   white-space: pre-wrap;
-  border: 1px solid #e4e7ed;
+  border: 1px solid var(--border-color);
 }
 
 @media print {
@@ -1445,7 +1305,7 @@ onUnmounted(() => {
   justify-content: center;
   padding: 12px 0;
   margin-top: 8px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-light);
 }
 
 /* ──── 订阅报告对话框 ──── */
@@ -1454,19 +1314,19 @@ onUnmounted(() => {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .sub-report-item {
   padding: 12px;
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .sub-report-item:hover {
-  border-color: #67c23a;
+  border-color: #52c41a;
   background: #f0fdf4;
 }
 
@@ -1476,4 +1336,3 @@ onUnmounted(() => {
   align-items: center;
 }
 </style>
-

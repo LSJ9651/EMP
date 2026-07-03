@@ -161,6 +161,8 @@ async function handleLogin() {
 
     // 优先使用 redirect 参数（登录前访问的页面），否则按角色跳转
     const redirectPath = route.query.redirect || roleRoutes[userData.role] || '/'
+    // 设置会话认证标志（路由守卫据此判断本次会话已登录）
+    sessionStorage.setItem('session_authenticated', '1')
     ElMessage.success('登录成功')
     router.push(redirectPath)
   } catch (e) {

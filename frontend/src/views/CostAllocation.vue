@@ -1,10 +1,10 @@
 <template>
   <div class="cost-allocation-page">
-    <h2 class="page-title">成本分摊</h2>
+    <PageTitle title="成本分摊" icon="Coin" />
 
     <!-- 工具栏 -->
-    <div class="toolbar">
-      <div class="toolbar-left">
+    <Toolbar>
+      <template #left>
         <el-date-picker
           v-model="dateRange"
           type="daterange"
@@ -18,8 +18,8 @@
           <el-option label="按比例分摊" value="ratio" />
           <el-option label="按设备类型细分" value="by_device_type" />
         </el-select>
-      </div>
-      <div class="toolbar-right">
+      </template>
+      <template #right>
         <el-dropdown @command="handleExport" style="margin-right: 12px">
           <el-button :loading="exporting">
             <el-icon><Download /></el-icon>导出
@@ -35,34 +35,43 @@
         <el-button type="primary" @click="fetchData" :loading="loading">
           <el-icon><Search /></el-icon>查询
         </el-button>
-      </div>
-    </div>
+      </template>
+    </Toolbar>
 
     <!-- 统计卡片 -->
     <el-row :gutter="16" style="margin-top: 16px" v-if="summaryData">
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">总电费</div>
-          <div class="stat-value cost">¥{{ (summaryData.total_cost || 0).toFixed(2) }}</div>
-        </el-card>
+        <StatCard
+          title="总电费"
+          :value="`¥${(summaryData.total_cost || 0).toFixed(2)}`"
+          icon="Money"
+          color="#f5222d"
+        />
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">总用电量</div>
-          <div class="stat-value">{{ (summaryData.total_energy_kwh || 0).toFixed(0) }} kWh</div>
-        </el-card>
+        <StatCard
+          title="总用电量"
+          :value="summaryData.total_energy_kwh?.toFixed(0) || 0"
+          unit="kWh"
+          icon="Lightning"
+          color="#4f8cf7"
+        />
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">车间数</div>
-          <div class="stat-value">{{ workshops.length }}</div>
-        </el-card>
+        <StatCard
+          title="车间数"
+          :value="workshops.length"
+          icon="OfficeBuilding"
+          color="#faad14"
+        />
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">分摊规则</div>
-          <div class="stat-value rule">{{ ruleLabel }}</div>
-        </el-card>
+        <StatCard
+          title="分摊规则"
+          :value="ruleLabel"
+          icon="Document"
+          color="#52c41a"
+        />
       </el-col>
     </el-row>
 
@@ -98,14 +107,14 @@
 
     <!-- 车间电费明细 -->
     <el-card header="车间电费明细" style="margin-top: 16px">
-      <el-table :data="workshops" border stripe v-loading="loading" @row-click="onWorkshopRowClick">
+      <el-table :data="workshops" border v-loading="loading" @row-click="onWorkshopRowClick">
         <el-table-column prop="workshop" label="车间" width="150" />
         <el-table-column prop="energy_kwh" label="用电量(kWh)" width="140">
           <template #default="{ row }">{{ (row.energy_kwh || 0).toFixed(2) }}</template>
         </el-table-column>
         <el-table-column prop="cost" label="电费(元)" width="140">
           <template #default="{ row }">
-            <span style="font-weight: 600; color: #f56c6c">¥{{ (row.cost || 0).toFixed(2) }}</span>
+            <span style="font-weight: 600; color: #f5222d">¥{{ (row.cost || 0).toFixed(2) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="peak_cost" label="峰时电费" width="130">
@@ -140,14 +149,14 @@
 
     <!-- 设备级成本明细 -->
     <el-card header="设备成本明细" style="margin-top: 16px" v-if="deviceData.length">
-      <el-table :data="deviceData" border stripe max-height="400" v-loading="deviceLoading">
+      <el-table :data="deviceData" border max-height="400" v-loading="deviceLoading">
         <el-table-column prop="device_name" label="设备名称" width="150" />
         <el-table-column prop="device_type" label="类型" width="100" />
         <el-table-column prop="workshop" label="车间" width="100" />
         <el-table-column prop="rated_power" label="额定功率(kW)" width="130" />
         <el-table-column prop="cost" label="电费(元)" width="120">
           <template #default="{ row }">
-            <span style="font-weight: 600; color: #f56c6c">¥{{ (row.cost || 0).toFixed(2) }}</span>
+            <span style="font-weight: 600; color: #f5222d">¥{{ (row.cost || 0).toFixed(2) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="energy_kwh" label="用电量(kWh)" width="130">
@@ -171,8 +180,8 @@
     </el-card>
 
     <!-- 车间详情弹窗 -->
-    <el-dialog v-model="detailVisible" :title="`${detailWorkshop} - 每日明细`" width="700px">
-      <el-table :data="detailData" border stripe max-height="450">
+    <el-dialog v-model="detailVisible" :title="`${detailWorkshop} - 每日明细`" width="700px" top="5vh">
+      <el-table :data="detailData" border max-height="450">
         <el-table-column prop="date" label="日期" width="130" />
         <el-table-column prop="cost" label="电费(元)" width="130">
           <template #default="{ row }">¥{{ (row.cost || 0).toFixed(2) }}</template>
@@ -201,6 +210,9 @@ import {
   exportCostCsv,
   getWorkshopDetail,
 } from '../api/api.js'
+import StatCard from '../components/common/StatCard.vue'
+import PageTitle from '../components/common/PageTitle.vue'
+import Toolbar from '../components/common/Toolbar.vue'
 
 // ─── 状态 ───
 const dateRange = ref([])
@@ -232,6 +244,10 @@ const pieOptions = [
 const ruleLabel = computed(() => {
   const labels = { ratio: '比例分摊', by_device_type: '按类型细分' }
   return labels[ruleType.value] || ruleType.value
+})
+
+const chartTabHeader = computed(() => {
+  return pieMode.value === 'workshop' ? '车间电费占比' : '峰平谷电费占比'
 })
 
 // ─── 数据获取 ───
@@ -342,8 +358,10 @@ async function handleExport(type) {
 }
 
 // ─── 图表 ───
+const CHART_COLORS = ['#4f8cf7', '#52c41a', '#faad14', '#f5222d', '#8c8c8c', '#722ed1']
+
 function progressColor(row) {
-  return row.percentage > 50 ? '#f56c6c' : row.percentage > 25 ? '#e6a23c' : '#409eff'
+  return row.percentage > 50 ? '#f5222d' : row.percentage > 25 ? '#faad14' : '#4f8cf7'
 }
 
 function initCharts() {
@@ -373,9 +391,9 @@ function updateBarChart() {
     xAxis: { type: 'category', data: names },
     yAxis: { type: 'value', name: '元' },
     series: [
-      { name: '峰时', type: 'bar', stack: 'total', data: peakCosts, color: '#f56c6c' },
-      { name: '平时', type: 'bar', stack: 'total', data: flatCosts, color: '#e6a23c' },
-      { name: '谷时', type: 'bar', stack: 'total', data: valleyCosts, color: '#67c23a' },
+      { name: '峰时', type: 'bar', stack: 'total', data: peakCosts, color: '#f5222d' },
+      { name: '平时', type: 'bar', stack: 'total', data: flatCosts, color: '#faad14' },
+      { name: '谷时', type: 'bar', stack: 'total', data: valleyCosts, color: '#52c41a' },
     ],
   }, true)
 }
@@ -397,14 +415,12 @@ function updatePieChart() {
     ]
   }
 
-  const colors = ['#1890ff', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#722ed1']
-
   pieChart.setOption({
     tooltip: { formatter: '{b}: ¥{c} ({d}%)' },
     legend: { bottom: 0, data: pieData.map(d => d.name) },
     series: [{
       type: 'pie', radius: ['50%', '75%'], center: ['50%', '45%'],
-      data: pieData, color: colors,
+      data: pieData, color: CHART_COLORS,
       label: { formatter: '{b}\n{d}%', fontSize: 11 },
       emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.5)' } },
     }],
@@ -435,50 +451,19 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.toolbar-left, .toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 .chart-box {
   width: 100%;
   height: 320px;
 }
-.stat-card {
-  text-align: center;
-}
-.stat-label {
-  font-size: 13px;
-  color: #909399;
-  margin-bottom: 8px;
-}
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #303133;
-}
-.stat-value.cost {
-  color: #f56c6c;
-}
-.stat-value.rule {
-  font-size: 18px;
-  color: #409eff;
-}
+
 .total-row {
   margin-top: 16px;
   text-align: right;
   font-size: 15px;
-  color: #606266;
+  color: var(--text-secondary);
 }
 .total-cost {
-  color: #f56c6c;
+  color: #f5222d;
   font-weight: 700;
   font-size: 20px;
 }

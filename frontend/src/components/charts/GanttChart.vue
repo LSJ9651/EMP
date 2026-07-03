@@ -5,6 +5,7 @@
 <script setup>
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
+import { COLORS } from './chartTheme.js'
 
 const props = defineProps({
   data: { type: Array, default: () => [] },

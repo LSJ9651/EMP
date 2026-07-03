@@ -1,6 +1,6 @@
 <template>
   <div class="schedule-page">
-    <h2 class="page-title">调度优化</h2>
+    <PageTitle title="调度优化" icon="Timer" />
 
     <el-row :gutter="16">
       <el-col :span="8">
@@ -22,7 +22,7 @@
                 <el-icon><MagicStick /></el-icon>AI 智能优化
               </el-button>
               <div style="text-align: center; margin-top: 8px" v-if="modeUsed">
-                <el-tag :type="modeUsed === 'cloud' ? 'success' : 'info'" size="small">
+                <el-tag :type="modeUsed === 'cloud' ? 'success' : 'info'" size="small" round>
                   {{ modeUsed === 'cloud' ? '☁ 云端优化' : '💻 本地优化' }}
                 </el-tag>
               </div>
@@ -41,7 +41,7 @@
               <el-icon><Promotion /></el-icon>下发执行
             </el-button>
             <div v-if="executionStatus" style="margin-top: 8px">
-              <el-tag :type="execStatusType">
+              <el-tag :type="execStatusType" round>
                 {{ executionStatus }}
               </el-tag>
             </div>
@@ -52,20 +52,20 @@
       <el-col :span="16">
         <el-card header="调度计划甘特图">
           <GanttChart v-if="scheduleData.length > 0" :data="scheduleData" />
-          <div v-else style="text-align: center; padding: 80px 0; color: #8c8c8c">
+          <div v-else style="text-align: center; padding: 80px 0; color: var(--text-tertiary)">
             <el-icon :size="48"><Timer /></el-icon>
             <div style="margin-top: 12px">请先执行调度优化</div>
           </div>
         </el-card>
 
         <el-card header="调度明细" style="margin-top: 16px" v-if="scheduleData.length > 0">
-          <el-table :data="scheduleData" border stripe size="small">
+          <el-table :data="scheduleData" border size="small">
             <el-table-column prop="device_name" label="设备" width="120" />
             <el-table-column prop="start" label="开始" width="80" />
             <el-table-column prop="end" label="结束" width="80" />
             <el-table-column prop="action" label="动作" width="80">
               <template #default="{ row }">
-                <el-tag :type="actionType(row.action)" size="small">{{ actionLabel(row.action) }}</el-tag>
+                <el-tag :type="actionType(row.action)" size="small" round>{{ actionLabel(row.action) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="price_per_kwh" label="电价(元)" width="80">
@@ -86,25 +86,25 @@
             <el-col :span="12">
               <div class="comparison-card estimated">
                 <div class="comparison-label">预估节费</div>
-                <div class="comparison-value">¥{{ totalEstimatedSaving }}</div>
+                <div class="comparison-value" style="color: #52c41a">¥{{ totalEstimatedSaving }}</div>
                 <div class="comparison-detail">基线成本 ¥{{ totalBaselineCost }}</div>
               </div>
             </el-col>
             <el-col :span="12">
               <div class="comparison-card actual">
                 <div class="comparison-label">实际节费</div>
-                <div class="comparison-value">¥{{ totalActualSaving }}</div>
+                <div class="comparison-value" style="color: #4f8cf7">¥{{ totalActualSaving }}</div>
                 <div class="comparison-detail">实际成本 ¥{{ totalActualCost }}</div>
               </div>
             </el-col>
           </el-row>
 
-          <el-table :data="executions" border stripe style="margin-top: 16px" v-loading="execLoading">
+          <el-table :data="executions" border style="margin-top: 16px" v-loading="execLoading">
             <el-table-column prop="id" label="执行ID" width="80" />
             <el-table-column prop="report_id" label="报告ID" width="80" />
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="row.status === 'completed' ? 'success' : row.status === 'failed' ? 'danger' : 'warning'" size="small">
+                <el-tag :type="row.status === 'completed' ? 'success' : row.status === 'failed' ? 'danger' : 'warning'" size="small" round>
                   {{ row.status === 'completed' ? '已完成' : row.status === 'running' ? '运行中' : row.status === 'failed' ? '失败' : '待执行' }}
                 </el-tag>
               </template>
@@ -117,21 +117,20 @@
             </el-table-column>
             <el-table-column label="节省" width="120">
               <template #default="{ row }">
-                <span v-if="row.baseline_cost && row.actual_cost" :style="{ color: (row.baseline_cost - row.actual_cost) > 0 ? '#67c23a' : '#f56c6c' }">
+                <span v-if="row.baseline_cost && row.actual_cost" :style="{ color: (row.baseline_cost - row.actual_cost) > 0 ? '#52c41a' : '#f5222d', fontWeight: 600 }">
                   ¥{{ ((row.baseline_cost || 0) - (row.actual_cost || 0)).toFixed(2) }}
                 </span>
                 <span v-else>-</span>
               </template>
             </el-table-column>
-            <el-table-column prop="start_time" label="时间" width="180">
-              <template #default="{ row }">{{ row.start_time || row.created_at || '-' }}</template>
-            </el-table-column>
+            <el-table-column prop="start_time" label="时间" width="180" />
             <el-table-column label="操作" width="120">
               <template #default="{ row }">
                 <el-button
                   v-if="row.status === 'running'"
-                  size="small"
+                  link
                   type="primary"
+                  size="small"
                   @click="handleComplete(row)"
                   :loading="completingId === row.id"
                 >
@@ -151,13 +150,14 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getDevices, runWorkflowOptimize, executeSchedule, getExecutions, completeExecution } from '../api/api.js'
 import GanttChart from '../components/charts/GanttChart.vue'
+import PageTitle from '../components/common/PageTitle.vue'
 
 const devices = ref([])
 const optimizing = ref(false)
 const result = ref(null)
 const scheduleData = ref([])
 const modeUsed = ref('')
-const currentReportId = ref(null)   // 当前优化结果对应的 AgentReport ID
+const currentReportId = ref(null)
 
 const form = ref({
   production_goal: 1000,
@@ -227,7 +227,7 @@ async function runOptimize() {
     if (res.code === 200) {
       const d = res.data
       modeUsed.value = d.mode_used || 'local'
-      currentReportId.value = d.report_id || null   // 工作流返回的 AgentReport ID
+      currentReportId.value = d.report_id || null
       result.value = d.data
       scheduleData.value = d.data?.schedule || []
       const cloudErr = d.data?._cloud_error
@@ -273,7 +273,6 @@ async function fetchExecutions() {
     const res = await getExecutions()
     if (res.code === 200) {
       executions.value = res.data || []
-      // 检查是否有 running 状态的执行需要轮询
       const hasRunning = executions.value.some(e => e.status === 'running')
       if (hasRunning) {
         startExecPolling()
@@ -321,7 +320,6 @@ async function handleComplete(row) {
   }
 }
 
-// 初始化时获取执行记录
 onMounted(async () => {
   await fetchDevicesList()
   await fetchExecutions()
@@ -339,30 +337,30 @@ onUnmounted(() => {
 }
 .result-label {
   font-size: 14px;
-  color: #8c8c8c;
+  color: var(--text-tertiary);
 }
 .result-value {
   font-size: 32px;
   font-weight: 700;
-  color: #67c23a;
+  color: #52c41a;
   margin-top: 8px;
 }
 
 .comparison-card {
-  background: #fff;
-  border-radius: 8px;
+  background: var(--card-bg, #fff);
+  border-radius: var(--radius-md, 8px);
   padding: 24px;
   text-align: center;
 }
 .comparison-card.estimated {
-  border: 2px solid #67c23a;
+  border: 2px solid #52c41a;
 }
 .comparison-card.actual {
-  border: 2px solid #409eff;
+  border: 2px solid #4f8cf7;
 }
 .comparison-label {
   font-size: 14px;
-  color: #8c8c8c;
+  color: var(--text-tertiary);
   margin-bottom: 8px;
 }
 .comparison-value {
@@ -370,14 +368,8 @@ onUnmounted(() => {
   font-weight: 700;
   margin-bottom: 4px;
 }
-.comparison-card.estimated .comparison-value {
-  color: #67c23a;
-}
-.comparison-card.actual .comparison-value {
-  color: #409eff;
-}
 .comparison-detail {
   font-size: 13px;
-  color: #909399;
+  color: var(--text-tertiary);
 }
 </style>

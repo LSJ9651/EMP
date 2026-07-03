@@ -221,6 +221,7 @@ onUnmounted(() => {
 function handleLogout() {
   authStore.logout()
   store.logout()
+  sessionStorage.removeItem('session_authenticated')
   router.push('/login')
 }
 </script>
@@ -244,6 +245,34 @@ function handleLogout() {
 .side-menu .el-sub-menu .el-menu-item {
   padding-left: 56px !important;
   font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+/* 侧边栏菜单 hover 动效 */
+.side-menu .el-menu-item:hover {
+  background-color: rgba(79, 140, 247, 0.1) !important;
+  padding-left: 58px !important;
+}
+
+.side-menu .el-sub-menu__title:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 菜单项选中指示条 */
+.side-menu .el-menu-item.is-active {
+  position: relative;
+  background-color: rgba(79, 140, 247, 0.15) !important;
+}
+
+.side-menu .el-menu-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  background: linear-gradient(180deg, #4f8cf7, #6c5ce7);
+  border-radius: 0 3px 3px 0;
 }
 
 /* 子菜单展开高亮分隔 */

@@ -1,15 +1,6 @@
 <template>
   <div class="ai-config-page">
-    <el-breadcrumb separator="/">
-      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>系统设置</el-breadcrumb-item>
-      <el-breadcrumb-item>AI 管理</el-breadcrumb-item>
-    </el-breadcrumb>
-
-    <div class="page-header">
-      <h2>🤖 AI 智能体管理</h2>
-      <p class="subtitle">配置 Coze 智能体工作流，管理本地/云端模式切换</p>
-    </div>
+    <PageTitle title="AI 智能体管理" icon="Cpu" subtitle="配置 Coze 智能体工作流，管理本地/云端模式切换" />
 
     <!-- 总开关 -->
     <el-card class="master-card" shadow="hover">
@@ -108,6 +99,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Check, RefreshLeft } from '@element-plus/icons-vue'
 import { getAIConfig, saveAIConfig } from '../api/api.js'
 import ServiceConfigCard from '../components/config/ServiceConfigCard.vue'
+import PageTitle from '../components/common/PageTitle.vue'
 
 const defaultConfig = {
   enable_cloud_agent: false,
@@ -215,24 +207,18 @@ onMounted(loadConfig)
   max-width: 900px;
   margin: 0 auto;
 }
-.page-header {
-  margin: 16px 0 24px;
-}
-.page-header h2 {
-  margin: 0;
-  font-size: 22px;
-}
-.subtitle {
-  margin: 4px 0 0;
-  color: #888;
-  font-size: 14px;
-}
 
 .master-card {
   margin-bottom: 16px;
   border: 1px solid #e6f0ff;
   background: linear-gradient(135deg, #f5f9ff, #fff);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
 }
+.master-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
 .master-switch-area {
   display: flex;
   align-items: center;
@@ -252,7 +238,7 @@ onMounted(loadConfig)
 }
 .master-desc {
   font-size: 13px;
-  color: #888;
+  color: var(--text-tertiary);
   margin-top: 2px;
 }
 
@@ -260,14 +246,20 @@ onMounted(loadConfig)
   margin-bottom: 20px;
   border: 1px solid #fff3e0;
   background: linear-gradient(135deg, #fffaf5, #fff);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
 }
+.apikey-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
 .apikey-header {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid var(--border-light);
 }
 .apikey-form {
   margin-top: 4px;
@@ -282,11 +274,11 @@ onMounted(loadConfig)
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-light);
 }
 .save-time {
   margin-left: auto;
-  color: #aaa;
+  color: var(--text-placeholder);
   font-size: 12px;
 }
 </style>

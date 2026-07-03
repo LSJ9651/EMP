@@ -1,19 +1,26 @@
 <template>
   <div class="devices-page">
-    <h2 class="page-title">设备管理</h2>
+    <PageTitle title="设备管理" icon="Monitor" />
 
     <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <el-tab-pane label="设备列表" name="list">
-        <el-button type="primary" @click="showAddDialog" style="margin-bottom: 16px">
-          <el-icon><Plus /></el-icon>添加设备
-        </el-button>
+        <Toolbar>
+          <template #left>
+            <el-button type="primary" @click="showAddDialog">
+              <el-icon><Plus /></el-icon>添加设备
+            </el-button>
+          </template>
+          <template #right>
+            <span style="font-size: 13px; color: var(--text-tertiary)">共 {{ devices.length }} 台设备</span>
+          </template>
+        </Toolbar>
 
-        <el-table :data="devices" border stripe v-loading="loading">
+        <el-table :data="devices" border v-loading="loading">
           <el-table-column prop="id" label="ID" width="60" />
           <el-table-column prop="name" label="设备名称" />
           <el-table-column prop="type" label="类型" width="120">
             <template #default="{ row }">
-              <el-tag>{{ row.type }}</el-tag>
+              <el-tag round>{{ row.type }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="rated_power" label="额定功率(kW)" width="130" />
@@ -29,6 +36,7 @@
                 :percentage="Math.round((row.avg_load_rate ?? row.load_rate ?? 0) * 100)"
                 :color="loadRateColor(row.avg_load_rate ?? row.load_rate ?? 0)"
                 :stroke-width="14"
+                :text-inside="true"
               />
             </template>
           </el-table-column>
@@ -44,29 +52,35 @@
           </el-table-column>
           <el-table-column prop="status" label="状态" width="100">
             <template #default="{ row }">
-              <el-tag :type="statusType(row.status)">{{ row.status }}</el-tag>
+              <el-tag :type="statusType(row.status)" round size="small">{{ row.status }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="280">
             <template #default="{ row }">
-              <el-button size="small" @click="showEditDialog(row)">编辑</el-button>
-              <el-button size="small" type="primary" :loading="analyzingId === row.id" @click="handleAnalyze(row)">
-                <el-icon><DataAnalysis /></el-icon>能耗分析
+              <el-button link type="primary" size="small" @click="showEditDialog(row)">编辑</el-button>
+              <el-button link type="primary" size="small" :loading="analyzingId === row.id" @click="handleAnalyze(row)">
+                <el-icon><DataAnalysis /></el-icon> 能耗分析
               </el-button>
-              <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+              <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
       </el-tab-pane>
 
       <el-tab-pane label="能效排行榜" name="ranking">
+        <Toolbar>
+          <template #right>
+            <span style="font-size: 13px; color: var(--text-tertiary)">按负载率从高到低排列</span>
+          </template>
+        </Toolbar>
+
         <el-table :data="rankingList" border stripe v-loading="rankingLoading" @row-click="goToDevice">
           <el-table-column label="排名" width="80">
             <template #default="{ $index }">
               <span v-if="$index === 0" style="font-size: 22px">🥇</span>
               <span v-else-if="$index === 1" style="font-size: 22px">🥈</span>
               <span v-else-if="$index === 2" style="font-size: 22px">🥉</span>
-              <el-tag v-else :type="$index < 5 ? 'warning' : 'info'" size="small">
+              <el-tag v-else :type="$index < 5 ? 'warning' : 'info'" size="small" round>
                 {{ $index + 1 }}
               </el-tag>
             </template>
@@ -78,7 +92,7 @@
           </el-table-column>
           <el-table-column prop="type" label="类型" width="120">
             <template #default="{ row }">
-              <el-tag>{{ row.type }}</el-tag>
+              <el-tag round>{{ row.type }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="负载率" width="200">
@@ -111,10 +125,10 @@
     </el-tabs>
 
     <!-- 添加/编辑对话框 -->
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑设备' : '添加设备'" width="500px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑设备' : '添加设备'" width="500px" top="5vh">
       <el-form :model="form" label-width="100px">
         <el-form-item label="设备名称">
-          <el-input v-model="form.name" />
+          <el-input v-model="form.name" placeholder="请输入设备名称" />
         </el-form-item>
         <el-form-item label="设备类型">
           <el-select v-model="form.type" style="width: 100%">
@@ -122,19 +136,19 @@
           </el-select>
         </el-form-item>
         <el-form-item label="额定功率(kW)">
-          <el-input-number v-model="form.rated_power" :min="0" :step="1" />
+          <el-input-number v-model="form.rated_power" :min="0" :step="1" style="width: 100%" />
         </el-form-item>
         <el-form-item label="车间">
-          <el-input v-model="form.workshop" />
+          <el-input v-model="form.workshop" placeholder="如：一车间" />
         </el-form-item>
         <el-form-item label="位置">
-          <el-input v-model="form.location" />
+          <el-input v-model="form.location" placeholder="设备安装位置" />
         </el-form-item>
         <el-form-item label="产线编号">
-          <el-input v-model="form.line_no" />
+          <el-input v-model="form.line_no" placeholder="如：A-01" />
         </el-form-item>
         <el-form-item label="效率系数">
-          <el-input-number v-model="form.efficiency" :min="0" :max="1" :step="0.01" />
+          <el-input-number v-model="form.efficiency" :min="0" :max="1" :step="0.01" style="width: 100%" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -144,7 +158,7 @@
     </el-dialog>
 
     <!-- 分析结果弹窗 -->
-    <el-dialog v-model="analysisVisible" :title="`能耗分析结果 — ${analysisDeviceName}`" width="700px" destroy-on-close>
+    <el-dialog v-model="analysisVisible" :title="`能耗分析结果 — ${analysisDeviceName}`" width="700px" destroy-on-close top="5vh">
       <div v-if="analysisResult">
         <el-tag :type="analysisMode === 'cloud' ? 'success' : 'info'" style="margin-bottom: 16px">
           {{ analysisMode === 'cloud' ? '☁ 云端智能分析' : '🖥 本地规则分析' }}
@@ -161,7 +175,7 @@
             <el-table-column prop="device_name" label="设备" width="120" />
             <el-table-column prop="severity" label="严重度" width="90">
               <template #default="{ row }">
-                <el-tag :type="row.severity === 'high' ? 'danger' : 'warning'" size="small">
+                <el-tag :type="row.severity === 'high' ? 'danger' : 'warning'" size="small" round>
                   {{ row.severity === 'high' ? '高' : '中' }}
                 </el-tag>
               </template>
@@ -177,7 +191,7 @@
           </ul>
         </div>
 
-        <div style="margin-top: 16px; color: #8c8c8c; font-size: 13px">
+        <div style="margin-top: 16px; color: var(--text-tertiary); font-size: 13px">
           分析设备数: {{ analysisResult.analyzed_devices ?? 1 }} &nbsp;|&nbsp;
           平均功率: {{ analysisResult.total_power_avg ?? '-' }} kW &nbsp;|&nbsp;
           耗时: {{ analysisElapsed }}ms
@@ -191,6 +205,9 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDevices, createDevice, updateDevice, deleteDevice, getDeviceRanking, runWorkflowAnalyze } from '../api/api.js'
+import StatCard from '../components/common/StatCard.vue'
+import PageTitle from '../components/common/PageTitle.vue'
+import Toolbar from '../components/common/Toolbar.vue'
 
 const activeTab = ref('list')
 const devices = ref([])
@@ -222,9 +239,9 @@ function statusType(status) {
 }
 
 function loadRateColor(rate) {
-  if (rate > 0.8) return '#67c23a'
-  if (rate >= 0.5) return '#e6a23c'
-  return '#f56c6c'
+  if (rate > 0.8) return '#52c41a'
+  if (rate >= 0.5) return '#faad14'
+  return '#f5222d'
 }
 
 function resetForm() {
@@ -300,7 +317,6 @@ async function fetchRanking() {
 }
 
 function goToDevice(row) {
-  // 跳转到设备列表 tab 并高亮该设备（简单地切换 tab）
   activeTab.value = 'list'
 }
 
@@ -341,6 +357,3 @@ onMounted(async () => {
   await fetchDevices()
 })
 </script>
-
-<style scoped>
-</style>

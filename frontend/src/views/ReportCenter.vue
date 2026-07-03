@@ -1,91 +1,101 @@
 <template>
   <div class="report-center-page">
-    <h2 class="page-title">报表中心</h2>
+    <PageTitle title="报表中心" icon="Document" />
 
     <el-tabs v-model="activeTab">
       <!-- Tab 1: 能耗报表 -->
       <el-tab-pane label="能耗报表" name="energy">
-        <div class="tab-header">
-          <el-radio-group v-model="reportType" @change="onReportTypeChange">
-            <el-radio-button value="daily">日报</el-radio-button>
-            <el-radio-button value="weekly">周报</el-radio-button>
-            <el-radio-button value="monthly">月报</el-radio-button>
-          </el-radio-group>
-          <el-date-picker
-            v-model="reportDate"
-            :type="datePickerType"
-            :placeholder="datePickerPlaceholder"
-            style="margin-left: 16px; width: 200px"
-            @change="fetchCurrentReport"
-          />
-          <el-button type="primary" style="margin-left: 16px" @click="exportExcel">
-            <el-icon><Download /></el-icon>导出Excel
-          </el-button>
-          <el-button type="success" @click="exportPDF">
-            <el-icon><Printer /></el-icon>导出PDF
-          </el-button>
-        </div>
+        <Toolbar>
+          <template #left>
+            <el-radio-group v-model="reportType" @change="onReportTypeChange">
+              <el-radio-button value="daily">日报</el-radio-button>
+              <el-radio-button value="weekly">周报</el-radio-button>
+              <el-radio-button value="monthly">月报</el-radio-button>
+            </el-radio-group>
+            <el-date-picker
+              v-model="reportDate"
+              :type="datePickerType"
+              :placeholder="datePickerPlaceholder"
+              style="margin-left: 16px; width: 200px"
+              @change="fetchCurrentReport"
+            />
+          </template>
+          <template #right>
+            <el-button type="primary" @click="exportExcel">
+              <el-icon><Download /></el-icon>导出Excel
+            </el-button>
+            <el-button type="success" @click="exportPDF">
+              <el-icon><Printer /></el-icon>导出PDF
+            </el-button>
+          </template>
+        </Toolbar>
 
-        <div v-loading="reportLoading" element-loading-text="加载报表数据...">
-          <el-row :gutter="16" style="margin-top: 16px">
+        <div v-loading="reportLoading" element-loading-text="加载报表数据..." style="margin-top: 16px">
+          <el-row :gutter="16">
             <el-col :span="6">
-              <div class="stat-card">
-                <div class="stat-label">总能耗</div>
-                <div class="stat-value">
-                  {{ displayData.total_energy_kwh || 0 }}<span class="unit">kWh</span>
-                </div>
-              </div>
+              <StatCard
+                title="总能耗"
+                :value="displayData.total_energy_kwh || 0"
+                unit="kWh"
+                icon="Lightning"
+                color="#4f8cf7"
+              />
             </el-col>
             <el-col :span="6">
-              <div class="stat-card">
-                <div class="stat-label">峰时用电</div>
-                <div class="stat-value">
-                  {{ displayData.peak_energy_kwh || 0 }}<span class="unit">kWh</span>
-                </div>
-              </div>
+              <StatCard
+                title="峰时用电"
+                :value="displayData.peak_energy_kwh || 0"
+                unit="kWh"
+                icon="Cpu"
+                color="#f5222d"
+              />
             </el-col>
             <el-col :span="6">
-              <div class="stat-card">
-                <div class="stat-label">平时用电</div>
-                <div class="stat-value">
-                  {{ displayData.flat_energy_kwh || 0 }}<span class="unit">kWh</span>
-                </div>
-              </div>
+              <StatCard
+                title="平时用电"
+                :value="displayData.flat_energy_kwh || 0"
+                unit="kWh"
+                icon="Monitor"
+                color="#faad14"
+              />
             </el-col>
             <el-col :span="6">
-              <div class="stat-card">
-                <div class="stat-label">谷时用电</div>
-                <div class="stat-value">
-                  {{ displayData.valley_energy_kwh || 0 }}<span class="unit">kWh</span>
-                </div>
-              </div>
+              <StatCard
+                title="谷时用电"
+                :value="displayData.valley_energy_kwh || 0"
+                unit="kWh"
+                icon="Odometer"
+                color="#52c41a"
+              />
             </el-col>
           </el-row>
 
           <el-row :gutter="16" style="margin-top: 16px">
             <el-col :span="8">
-              <div class="stat-card">
-                <div class="stat-label">碳排放估算</div>
-                <div class="stat-value">
-                  {{ displayData.co2_kg || 0 }}<span class="unit">kgCO₂</span>
-                </div>
-              </div>
+              <StatCard
+                title="碳排放估算"
+                :value="displayData.co2_kg || 0"
+                unit="kgCO₂"
+                icon="TrendCharts"
+                color="#8c8c8c"
+              />
             </el-col>
             <el-col :span="8">
-              <div class="stat-card">
-                <div class="stat-label">预估成本</div>
-                <div class="stat-value">
-                  ¥{{ (displayData.cost_yuan || 0).toFixed(2) }}<span class="unit">元</span>
-                </div>
-              </div>
+              <StatCard
+                title="预估成本"
+                :value="`¥${(displayData.cost_yuan || 0).toFixed(2)}`"
+                icon="Money"
+                color="#f5222d"
+              />
             </el-col>
             <el-col :span="8">
-              <div class="stat-card">
-                <div class="stat-label">最大功率</div>
-                <div class="stat-value">
-                  {{ displayData.max_power_kw || 0 }}<span class="unit">kW</span>
-                </div>
-              </div>
+              <StatCard
+                title="最大功率"
+                :value="displayData.max_power_kw || 0"
+                unit="kW"
+                icon="Cpu"
+                color="#4f8cf7"
+              />
             </el-col>
           </el-row>
         </div>
@@ -93,44 +103,52 @@
 
       <!-- Tab 2: 设备数据导出 -->
       <el-tab-pane label="设备数据导出" name="device">
-        <div class="tab-header">
-          <el-select v-model="deviceFilter" placeholder="选择设备" clearable style="width: 200px">
-            <el-option v-for="d in devices" :key="d.id" :label="d.name" :value="d.id" />
-          </el-select>
-          <el-date-picker
-            v-model="deviceDateRange"
-            type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            style="margin-left: 16px; width: 360px"
-          />
-          <el-button type="primary" style="margin-left: 16px" :loading="exportingDevice" @click="exportDevice">
-            <el-icon><Download /></el-icon>导出
-          </el-button>
-        </div>
+        <Toolbar>
+          <template #left>
+            <el-select v-model="deviceFilter" placeholder="选择设备" clearable style="width: 200px">
+              <el-option v-for="d in devices" :key="d.id" :label="d.name" :value="d.id" />
+            </el-select>
+            <el-date-picker
+              v-model="deviceDateRange"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              style="margin-left: 16px; width: 360px"
+            />
+          </template>
+          <template #right>
+            <el-button type="primary" :loading="exportingDevice" @click="exportDevice">
+              <el-icon><Download /></el-icon>导出
+            </el-button>
+          </template>
+        </Toolbar>
       </el-tab-pane>
 
       <!-- Tab 3: 告警历史导出 -->
       <el-tab-pane label="告警历史导出" name="alert">
-        <div class="tab-header">
-          <el-date-picker
-            v-model="alertDateRange"
-            type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            style="width: 360px"
-          />
-          <el-select v-model="alertSeverity" placeholder="严重程度" clearable style="margin-left: 16px; width: 140px">
-            <el-option label="严重" value="critical" />
-            <el-option label="警告" value="warning" />
-            <el-option label="提示" value="info" />
-          </el-select>
-          <el-button type="primary" style="margin-left: 16px" :loading="exportingAlert" @click="exportAlert">
-            <el-icon><Download /></el-icon>导出
-          </el-button>
-        </div>
+        <Toolbar>
+          <template #left>
+            <el-date-picker
+              v-model="alertDateRange"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              style="width: 360px"
+            />
+            <el-select v-model="alertSeverity" placeholder="严重程度" clearable style="margin-left: 16px; width: 140px">
+              <el-option label="严重" value="critical" />
+              <el-option label="警告" value="warning" />
+              <el-option label="提示" value="info" />
+            </el-select>
+          </template>
+          <template #right>
+            <el-button type="primary" :loading="exportingAlert" @click="exportAlert">
+              <el-icon><Download /></el-icon>导出
+            </el-button>
+          </template>
+        </Toolbar>
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -140,6 +158,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getDevices, getDailyReport, getWeeklyReport, getMonthlyReport, exportDailyReport, exportWeeklyReport, exportMonthlyReport, exportDeviceData, exportAlertHistory } from '../api/api.js'
+import StatCard from '../components/common/StatCard.vue'
+import PageTitle from '../components/common/PageTitle.vue'
+import Toolbar from '../components/common/Toolbar.vue'
 
 const activeTab = ref('energy')
 const reportType = ref('daily')
@@ -242,7 +263,6 @@ async function fetchCurrentReport() {
 /** 切换报表类型：优先使用缓存，无缓存时才请求 */
 function onReportTypeChange() {
   if (reportCache.value[reportType.value]) {
-    // 命中缓存，直接展示（无loading闪烁）
     return
   }
   fetchCurrentReport()
@@ -373,22 +393,11 @@ function downloadBlob(data, filename) {
 
 // ──── 生命周期：预加载三种报表 + 设备列表 ────
 onMounted(async () => {
-  // 设备列表和当前日报并行加载
   await Promise.all([
     fetchDevicesList(),
     fetchReportByType('daily'),
   ])
-  // 后台静默预加载周报和月报，不阻塞首屏
   fetchReportByType('weekly')
   fetchReportByType('monthly')
 })
 </script>
-
-<style scoped>
-.tab-header {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-</style>

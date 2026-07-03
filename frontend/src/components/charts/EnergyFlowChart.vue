@@ -5,6 +5,7 @@
 <script setup>
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
+import { COLORS } from './chartTheme.js'
 
 const props = defineProps({
   data: { type: Object, default: () => ({ nodes: [], links: [] }) },
@@ -39,7 +40,7 @@ function updateChart() {
       position: 'bottom',
     },
     itemStyle: {
-      color: ['#1890ff', '#67c23a', '#e6a23c'][n.category] || '#909399',
+      color: COLORS[n.category] || '#8c8c8c',
     },
   }))
 

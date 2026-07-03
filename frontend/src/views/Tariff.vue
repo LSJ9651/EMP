@@ -1,29 +1,36 @@
 <template>
   <div class="tariff-page">
-    <h2 class="page-title">电价策略配置</h2>
+    <PageTitle title="电价策略配置" icon="Money" />
 
     <el-row :gutter="16">
       <el-col :span="16">
-        <el-button type="primary" @click="showAddDialog" style="margin-bottom: 16px">
-          <el-icon><Plus /></el-icon>添加电价策略
-        </el-button>
+        <Toolbar>
+          <template #left>
+            <el-button type="primary" @click="showAddDialog">
+              <el-icon><Plus /></el-icon>添加电价策略
+            </el-button>
+          </template>
+          <template #right>
+            <span style="font-size: 13px; color: var(--text-tertiary)">共 {{ tariffs.length }} 个时段</span>
+          </template>
+        </Toolbar>
 
-        <el-table :data="tariffs" border stripe v-loading="loading">
+        <el-table :data="tariffs" border v-loading="loading">
           <el-table-column prop="period_name" label="时段名称" width="100">
             <template #default="{ row }">
-              <el-tag :type="tagType(row.period_name)">{{ row.period_name }}</el-tag>
+              <el-tag :type="tagType(row.period_name)" round size="small">{{ row.period_name }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="start_time" label="开始时间" width="100" />
           <el-table-column prop="end_time" label="结束时间" width="100" />
           <el-table-column prop="price_per_kwh" label="电价(元/kWh)" width="130">
             <template #default="{ row }">
-              <span :style="{ color: priceColor(row.price_per_kwh) }">
+              <span :style="{ color: priceColor(row.price_per_kwh), fontWeight: 600 }">
                 {{ row.price_per_kwh.toFixed(2) }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="description" label="说明" />
+          <el-table-column prop="description" label="说明" min-width="150" show-overflow-tooltip />
           <el-table-column prop="is_active" label="启用" width="80">
             <template #default="{ row }">
               <el-switch :model-value="row.is_active" disabled />
@@ -31,7 +38,7 @@
           </el-table-column>
           <el-table-column label="操作" width="100">
             <template #default="{ row }">
-              <el-button size="small" @click="showEditDialog(row)">编辑</el-button>
+              <el-button link type="primary" size="small" @click="showEditDialog(row)">编辑</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -39,15 +46,15 @@
 
       <el-col :span="8">
         <el-card header="当前时段电价">
-          <div v-if="currentTariff" style="text-align: center">
-            <div style="font-size: 48px; font-weight: 700; color: #1890ff">
+          <div v-if="currentTariff" style="text-align: center; padding: 12px 0">
+            <div style="font-size: 48px; font-weight: 700; background: var(--brand-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent">
               {{ currentTariff.price_per_kwh?.toFixed(2) || '0.80' }}
             </div>
-            <div style="color: #8c8c8c; margin-top: 8px">元/kWh</div>
-            <el-tag :type="tagType(currentTariff.period_name)" size="large" style="margin-top: 12px">
+            <div style="color: var(--text-tertiary); margin-top: 8px">元/kWh</div>
+            <el-tag :type="tagType(currentTariff.period_name)" size="large" round style="margin-top: 12px">
               {{ currentTariff.period_name }}
             </el-tag>
-            <div style="margin-top: 8px; color: #8c8c8c">
+            <div style="margin-top: 8px; color: var(--text-tertiary); font-size: 13px">
               {{ currentTariff.start_time }} - {{ currentTariff.end_time }}
             </div>
           </div>
@@ -59,6 +66,7 @@
             <el-progress
               :percentage="(t.price_per_kwh / maxPrice) * 100"
               :color="progressColor(t.price_per_kwh)"
+              :stroke-width="8"
               :show-text="false"
             />
             <div class="tariff-price">¥{{ t.price_per_kwh.toFixed(2) }}</div>
@@ -68,7 +76,7 @@
     </el-row>
 
     <!-- 添加/编辑对话框 -->
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑电价策略' : '添加电价策略'" width="500px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑电价策略' : '添加电价策略'" width="500px" top="5vh">
       <el-form :model="form" label-width="110px">
         <el-form-item label="时段名称">
           <el-select v-model="form.period_name" style="width: 100%">
@@ -76,16 +84,16 @@
           </el-select>
         </el-form-item>
         <el-form-item label="开始时间">
-          <el-time-picker v-model="form.start_time" format="HH:mm" value-format="HH:mm" />
+          <el-time-picker v-model="form.start_time" format="HH:mm" value-format="HH:mm" style="width: 100%" />
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-time-picker v-model="form.end_time" format="HH:mm" value-format="HH:mm" />
+          <el-time-picker v-model="form.end_time" format="HH:mm" value-format="HH:mm" style="width: 100%" />
         </el-form-item>
         <el-form-item label="电价(元/kWh)">
-          <el-input-number v-model="form.price_per_kwh" :min="0" :step="0.01" :precision="2" />
+          <el-input-number v-model="form.price_per_kwh" :min="0" :step="0.01" :precision="2" style="width: 100%" />
         </el-form-item>
         <el-form-item label="说明">
-          <el-input v-model="form.description" />
+          <el-input v-model="form.description" placeholder="可选" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -100,6 +108,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getTariffs, createTariff, updateTariff, getCurrentTariff } from '../api/api.js'
+import PageTitle from '../components/common/PageTitle.vue'
+import Toolbar from '../components/common/Toolbar.vue'
 
 const tariffs = ref([])
 const currentTariff = ref(null)
@@ -126,15 +136,15 @@ function tagType(period) {
 }
 
 function priceColor(price) {
-  if (price > 1.0) return '#f56c6c'
-  if (price > 0.5) return '#e6a23c'
-  return '#67c23a'
+  if (price > 1.0) return '#f5222d'
+  if (price > 0.5) return '#faad14'
+  return '#52c41a'
 }
 
 function progressColor(price) {
-  if (price > 1.0) return '#f56c6c'
-  if (price > 0.5) return '#e6a23c'
-  return '#67c23a'
+  if (price > 1.0) return '#f5222d'
+  if (price > 0.5) return '#faad14'
+  return '#52c41a'
 }
 
 function showAddDialog() {
@@ -191,7 +201,7 @@ onMounted(fetchData)
 .tariff-name {
   width: 50px;
   font-size: 13px;
-  color: #606266;
+  color: var(--text-secondary);
 }
 .tariff-price {
   width: 60px;

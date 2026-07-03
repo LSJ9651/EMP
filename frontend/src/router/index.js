@@ -113,9 +113,6 @@ const routes = [
   },
 ]
 
-// 首次加载标志：确保每次刷新都从登录页开始
-let _isFirstNavigation = true
-
 // 角色 → 默认首页路由映射
 const roleDefaultRoutes = {
   admin: '/',
@@ -175,27 +172,33 @@ function canAccessRoute(user, routeMeta) {
 
 router.beforeEach((to, from, next) => {
   // ════════════════════════════════════════════════════════════
-  // 规则 1：首次加载（刷新/新开标签页），无论是否已登录，
-  //         均强制跳转登录页，并将目标路径保存为 redirect 参数
+  // 规则 1：会话认证检查 — 每次新开标签页或刷新后，
+  //         sessionStorage 为空，说明是新会话。
+  //         清除 localStorage 中的旧认证缓存，强制显示登录页。
   // ════════════════════════════════════════════════════════════
-  if (_isFirstNavigation) {
-    _isFirstNavigation = false
+  const sessionAuth = sessionStorage.getItem('session_authenticated')
+  if (!sessionAuth) {
+    // 新会话：清除旧认证缓存，防止死循环
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    localStorage.removeItem('user_permissions')
+
     if (to.path !== '/login') {
       next({ path: '/login', query: { redirect: to.fullPath } })
       return
     }
-    next()
+    next() // 到 /login，正常渲染登录页
     return
   }
 
+  // 以下只有 sessionAuth 存在时才执行（即登录成功后）
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
   const isAuthenticated = !!token && !!user
 
   // ════════════════════════════════════════════════════════════
-  // 规则 2：未登录用户尝试访问需要认证的页面 → 拦截到登录页
-  //         （同时保存目标路径，登录后跳回）
+  // 规则 2：未登录用户访问需认证页面 → 拦截到登录页
   // ════════════════════════════════════════════════════════════
   if (to.meta.requiresAuth !== false && !isAuthenticated) {
     next({ path: '/login', query: { redirect: to.fullPath } })
@@ -203,8 +206,7 @@ router.beforeEach((to, from, next) => {
   }
 
   // ════════════════════════════════════════════════════════════
-  // 规则 3：已登录用户访问登录页 → 根据角色跳转到对应首页
-  //         如果 URL 带有 redirect 参数则优先跳转到该路径
+  // 规则 3：已登录用户访问登录页 → 跳转到首页
   // ════════════════════════════════════════════════════════════
   if (to.path === '/login' && isAuthenticated) {
     const redirect = to.query.redirect
@@ -212,13 +214,12 @@ router.beforeEach((to, from, next) => {
       next(redirect)
       return
     }
-    const defaultRoute = roleDefaultRoutes[user.role] || '/'
-    next(defaultRoute)
+    next(roleDefaultRoutes[user.role] || '/')
     return
   }
 
   // ════════════════════════════════════════════════════════════
-  // 规则 4：防止无限重定向循环
+  // 规则 4：防无限重定向循环
   // ════════════════════════════════════════════════════════════
   if (to.path === from.path) {
     next()
@@ -226,8 +227,7 @@ router.beforeEach((to, from, next) => {
   }
 
   // ════════════════════════════════════════════════════════════
-  // 规则 5：已登录用户 — 细粒度权限校验（角色 / 权限点）
-  //         不满足权限的，降级跳转到首页；首页都无法访问则登出
+  // 规则 5：权限校验
   // ════════════════════════════════════════════════════════════
   if (to.meta.requiresAuth !== false && isAuthenticated) {
     if (!canAccessRoute(user, to.meta)) {
