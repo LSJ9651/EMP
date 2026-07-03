@@ -118,6 +118,22 @@ async def lifespan(app: FastAPI):
         )
         db.add(n)
 
+        # 发送外部通知（邮件/钉钉）
+        if sub.notify_method and sub.notify_method != "system":
+            from services.notification_dispatcher import dispatch_notification
+            report_data = {
+                "report_name": sub.name,
+                "report_summary": result.get("summary", "能耗分析报告"),
+                "report_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "device_count": result.get("analyzed_devices", 0),
+                "report_id": report.id,
+            }
+            dispatch_result = dispatch_notification(sub, report_data)
+            if dispatch_result.get("success"):
+                logger.info(f"外部通知已发送 [{sub.notify_method}]: {sub.name}")
+            else:
+                logger.warning(f"外部通知发送失败 [{sub.notify_method}]: {dispatch_result.get('error')}")
+
         sub.last_run_at = datetime.now()
         db.commit()
         logger.info(f"已执行订阅: {sub.name} ({sub.cron_time})")

@@ -627,6 +627,24 @@ async def run_subscription(sub_id: int, db=Depends(get_db)):
         source_id=report.id,
     )
 
+    # 发送外部通知（邮件/钉钉）
+    if sub.notify_method and sub.notify_method != "system":
+        from services.notification_dispatcher import dispatch_notification
+        from utils.logger import setup_logger
+        _log = setup_logger("agent")
+        report_data = {
+            "report_name": sub.name,
+            "report_summary": result.get("summary", "能耗分析报告"),
+            "report_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "device_count": result.get("analyzed_devices", 0),
+            "report_id": report.id,
+        }
+        dispatch_result = dispatch_notification(sub, report_data)
+        if dispatch_result.get("success"):
+            _log.info(f"外部通知已发送 [{sub.notify_method}]: {sub.name}")
+        else:
+            _log.warning(f"外部通知发送失败 [{sub.notify_method}]: {dispatch_result.get('error')}")
+
     db.commit()
     db.refresh(report)
 
