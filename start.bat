@@ -55,7 +55,7 @@ if not exist "%BACKEND_DIR%\.venv\Scripts\python.exe" (
 
 :: Activate venv and check dependencies
 call "%BACKEND_DIR%\.venv\Scripts\activate.bat"
-python -c "import fastapi" >nul 2>&1
+"%BACKEND_DIR%\.venv\Scripts\python" -c "import fastapi" >nul 2>&1
 if %errorlevel% neq 0 (
     echo         [WARN] Backend dependencies not installed, installing...
     pushd "%BACKEND_DIR%"
@@ -101,9 +101,20 @@ if %errorlevel% neq 0 (
 )
 echo         API Docs: http://localhost:8000/docs
 
-:: Wait for backend
+:: Wait for backend, then verify it is really up
 echo         Waiting for backend service...
 timeout /t 3 /nobreak >nul
+
+:: Health check: retry up to 10 seconds
+for /l %%i in (1,1,10) do (
+    >nul 2>nul curl -sf http://localhost:8000/
+    if !errorlevel! equ 0 goto :backend_ready
+    >nul 2>nul powershell -Command "try { (Invoke-WebRequest -Uri http://localhost:8000/ -UseBasicParsing).StatusCode -eq 200 } catch { $false }"
+    if !errorlevel! equ 0 goto :backend_ready
+    timeout /t 1 /nobreak >nul
+)
+echo         [WARN] Backend did not respond, continuing anyway...
+:backend_ready
 
 :: Start frontend (new window)
 echo         Starting frontend service (http://localhost:5173) ...
