@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from models import RAGChatSession, RAGChatMessage, LLMConfig
 from services.llm_factory import create_llm
+from services.llm_config_service import get_resolved_config
 from services.rag_retriever import retrieve, format_context
 
 logger = logging.getLogger(__name__)
@@ -122,8 +123,8 @@ async def rag_chat_stream(
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context=context)
     history = get_session_history(db, current_session_id)
 
-    # 5. 获取 LLM 配置并创建实例
-    llm_config = db.query(LLMConfig).filter(LLMConfig.id == 1).first()
+    # 5. 获取 LLM 配置并创建实例（get_resolved_config 会解析 .env 中的真实 Key）
+    llm_config = get_resolved_config(db)
     llm = create_llm(llm_config)
 
     if not llm:

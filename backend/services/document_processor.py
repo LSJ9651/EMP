@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from models import Document, DocumentChunk, KnowledgeBase
 from services.llm_factory import create_embeddings
-from services.llm_config_service import get_llm_config
+from services.llm_config_service import get_resolved_config
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +56,8 @@ def process_document(doc_id: int, db: Session):
         # 3. 文本分块
         chunks = split_texts(texts)
 
-        # 4. 获取 LLM 配置并创建 Embeddings
-        llm_config = get_llm_config(db)
+        # 4. 获取 LLM 配置并创建 Embeddings（get_resolved_config 会解析 .env 中的真实 Key）
+        llm_config = get_resolved_config(db)
         embeddings = create_embeddings(llm_config)
         if not embeddings:
             raise RuntimeError("无法创建 Embeddings 实例，请检查 LLM 配置")

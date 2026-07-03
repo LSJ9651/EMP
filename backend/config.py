@@ -12,6 +12,20 @@ class Settings:
     DEFAULT_PORT = 8000
     DEFAULT_HOST = "0.0.0.0"
 
+    # ── LLM API Key 占位符 ──
+    # 前端和 API 返回中用此值替代真实 Key，防止 Key 泄露或意外覆盖
+    KEY_PLACEHOLDER = "********"
+
+    @property
+    def LLM_API_KEY(self) -> str:
+        """LLM 对话模型真实 API Key，优先从 .env 读取"""
+        return os.environ.get("LLM_API_KEY", "")
+
+    @property
+    def LLM_EMBEDDING_API_KEY(self) -> str:
+        """LLM 嵌入模型真实 API Key，优先从 .env 读取"""
+        return os.environ.get("LLM_EMBEDDING_API_KEY", "")
+
     @property
     def SERVER_PORT(self) -> int:
         """

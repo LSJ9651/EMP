@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl -s http://localhost:8000/api/llm-config/)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('对话Provider:', d['data']['provider']\\); print\\('对话模型:', d['data']['model_name']\\); print\\('嵌入Provider:', d['data']['embedding_provider']\\); print\\('嵌入模型:', d['data']['embedding_model']\\)\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/knowledge-bases/ -H \"Authorization: Bearer admin:1\" -H \"Content-Type: application/json\" -d '{\"name\":\"能耗基础知识库\",\"description\":\"存放企业能耗标准文档\"}')",
+      "Bash(echo \"test content for RAG\")",
+      "Bash(curl -s -X POST \"http://localhost:8000/api/knowledge-bases/1/documents/upload\" -H \"Authorization: Bearer admin:1\" -F \"file=@/tmp/test_rag.txt\")",
+      "Bash(curl -s \"http://localhost:8000/api/knowledge-bases/1/documents\" -H \"Authorization: Bearer admin:1\")",
+      "Bash(python -c ' *)",
+      "Bash(awk '{print $5}')",
+      "Bash(tasklist //FI \"PID eq 8104\")",
+      "Bash(taskkill //F //PID 8104)",
+      "Bash(taskkill //F //PID 39076)",
+      "Bash(python main.py)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Backend started:', d['message']\\)\")"
+    ]
+  }
+}

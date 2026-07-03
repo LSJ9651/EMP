@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from database import get_db
+from config import settings
 from services.llm_factory import create_llm, create_embeddings
-from services.llm_config_service import get_llm_config, save_llm_config, to_dict
+from services.llm_config_service import get_llm_config, get_resolved_config, save_llm_config, to_dict, PLACEHOLDER
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/llm-config", tags=["LLM配置"])
@@ -54,14 +55,19 @@ def save_config(data: LLMConfigSaveRequest, db: Session = Depends(get_db)):
     """保存 LLM 配置"""
     save_data = data.model_dump(exclude_none=True)
 
-    # 对话 api_key 为空时保留旧值
-    if not data.api_key:
+    # ── API Key 安全保护 ──
+    # 如果前端发回占位符 "********"，则丢弃该字段，保留数据库 / .env 中的真实值
+    if data.api_key == PLACEHOLDER:
+        save_data.pop("api_key", None)
+    elif not data.api_key:
+        # api_key 为空时保留旧值（兼容旧前端不传 Key 的情况）
         existing = get_llm_config(db)
         if existing and existing.api_key:
             save_data["api_key"] = existing.api_key
 
-    # 嵌入 api_key 为空时保留旧值
-    if not data.embedding_api_key:
+    if data.embedding_api_key == PLACEHOLDER:
+        save_data.pop("embedding_api_key", None)
+    elif not data.embedding_api_key:
         existing = get_llm_config(db)
         if existing and existing.embedding_api_key:
             save_data["embedding_api_key"] = existing.embedding_api_key
@@ -85,15 +91,24 @@ def test_connection(data: TestConnectionRequest, db: Session = Depends(get_db)):
         test_config.is_active = True
         test_config.provider = data.provider
         test_config.api_base = data.api_base
-        test_config.api_key = data.api_key
         test_config.model_name = data.model_name
         test_config.temperature = data.temperature
         test_config.max_tokens = data.max_tokens
+
+        # ── 补全真实 API Key ──
+        # 前端测试时可能传空字符串或占位符，需要从 .env（优先）或数据库补全
+        resolved = get_resolved_config(db)
+        test_config.api_key = data.api_key  # 先用请求中的值
+        if not test_config.api_key or test_config.api_key == PLACEHOLDER:
+            test_config.api_key = resolved.api_key or ""
+
         # 嵌入配置
         test_config.embedding_provider = data.embedding_provider or data.provider
         test_config.embedding_api_base = data.embedding_api_base or data.api_base
-        test_config.embedding_api_key = data.embedding_api_key or data.api_key
         test_config.embedding_model = data.embedding_model or "nomic-embed-text"
+        test_config.embedding_api_key = data.embedding_api_key or data.api_key
+        if not test_config.embedding_api_key or test_config.embedding_api_key == PLACEHOLDER:
+            test_config.embedding_api_key = resolved.embedding_api_key or ""
 
         result = {"success": True, "details": {}}
 

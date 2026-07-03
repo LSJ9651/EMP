@@ -214,13 +214,17 @@ onMounted(async () => {
   try {
     const res = await getLLMConfig()
     if (res.code === 200 && res.data) {
+      // 占位符常量：后端返回的占位符 "********"
+      const P = '********'
+
       // 填充各 Provider 缓存
       chatProviderCache.openai_compatible.api_base = res.data.api_base || ''
-      chatProviderCache.openai_compatible.api_key = res.data.api_key || ''
+      // 后端返回占位符时说明已有 Key，前端缓存为空（不发送回来）
+      chatProviderCache.openai_compatible.api_key = res.data.api_key === P ? '' : (res.data.api_key || '')
       chatProviderCache.openai_compatible.model_name = res.data.model_name || 'gpt-4o-mini'
 
       embeddingProviderCache.openai_compatible.api_base = res.data.embedding_api_base || ''
-      embeddingProviderCache.openai_compatible.api_key = res.data.embedding_api_key || ''
+      embeddingProviderCache.openai_compatible.api_key = res.data.embedding_api_key === P ? '' : (res.data.embedding_api_key || '')
       embeddingProviderCache.openai_compatible.model_name = res.data.embedding_model || 'text-embedding-3-small'
 
       // 设置当前显示的配置

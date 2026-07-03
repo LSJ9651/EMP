@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from models import LLMConfig
 from services.llm_factory import create_embeddings
+from services.llm_config_service import get_resolved_config
 from services.document_processor import CHROMA_PERSIST_DIR, get_collection_name
 
 logger = logging.getLogger(__name__)
@@ -46,8 +47,8 @@ def retrieve(query: str, kb_ids: list[int], db: Session, top_k: int = 5) -> list
         logger.warning("No knowledge base IDs provided for retrieval")
         return []
 
-    # 获取 LLM 配置并创建 Embeddings
-    llm_config = db.query(LLMConfig).filter(LLMConfig.id == 1).first()
+    # 获取 LLM 配置并创建 Embeddings（get_resolved_config 会解析 .env 中的真实 Key）
+    llm_config = get_resolved_config(db)
     if not llm_config or not llm_config.is_active:
         logger.warning("LLM config not active, cannot perform retrieval")
         return []
