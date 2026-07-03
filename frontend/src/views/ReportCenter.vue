@@ -393,11 +393,18 @@ function downloadBlob(data, filename) {
 
 // ──── 生命周期：预加载三种报表 + 设备列表 ────
 onMounted(async () => {
-  await Promise.all([
-    fetchDevicesList(),
-    fetchReportByType('daily'),
-  ])
-  fetchReportByType('weekly')
-  fetchReportByType('monthly')
+  await fetchDevicesList()
+  await fetchReportByType('daily')
+  // 预加载周报和月报（使用await确保不产生未处理的Promise拒绝）
+  try {
+    await fetchReportByType('weekly')
+  } catch {
+    // 预加载失败不影响主流程
+  }
+  try {
+    await fetchReportByType('monthly')
+  } catch {
+    // 预加载失败不影响主流程
+  }
 })
 </script>

@@ -294,7 +294,7 @@ async function handleSave() {
 
 async function handleDelete(row) {
   try {
-    await ElMessageBox.confirm(`确定删除用户 "${row.name}" 吗？`, '确认删除', { type: 'warning' })
+    await ElMessageBox.confirm(`确定删除用户 "${row.username}" 吗？`, '确认删除', { type: 'warning' })
     await updateUser(row.id, { status: 'deleted' })
     ElMessage.success('用户已删除')
     await fetchUsers()

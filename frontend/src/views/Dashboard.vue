@@ -223,7 +223,7 @@ async function fetchData() {
     const [ov, ef, tr, al] = await Promise.all([
       getOverview(),
       getEnergyFlow(),
-      getTrend(null, 30),
+      getTrend(undefined, 30),
       getAlertsBar(5),
     ])
     if (ov.code === 200) overview.value = ov.data
@@ -232,6 +232,9 @@ async function fetchData() {
     if (al.code === 200) alerts.value = al.data
   } catch (e) {
     console.error('Dashboard fetch error:', e)
+    if (!overview.value.total_power_kw && !overview.value.today_energy_kwh) {
+      ElMessage.warning('数据加载失败，请检查后端服务')
+    }
   }
 }
 

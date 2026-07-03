@@ -183,6 +183,8 @@ async function fetchData() {
     const [tariffRes, currentRes] = await Promise.all([getTariffs(), getCurrentTariff()])
     if (tariffRes.code === 200) tariffs.value = tariffRes.data
     if (currentRes.code === 200) currentTariff.value = currentRes.data
+  } catch (e) {
+    ElMessage.error('获取电价数据失败')
   } finally {
     loading.value = false
   }

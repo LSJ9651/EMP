@@ -295,7 +295,7 @@ function startExecPolling() {
     if (!hasRunning) {
       stopExecPolling()
     }
-  }, 1000)
+  }, 5000)
 }
 
 function stopExecPolling() {

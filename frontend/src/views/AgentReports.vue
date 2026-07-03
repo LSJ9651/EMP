@@ -817,7 +817,7 @@ function openEditDialog(row) {
     cron_time_obj: row.cron_time,
     notify_method: row.notify_method,
     notify_config: row.notify_config || {},
-    device_ids_list: row.device_ids ? row.device_ids.split(',').map(Number) : [],
+    device_ids_list: row.device_ids ? (Array.isArray(row.device_ids) ? row.device_ids : String(row.device_ids).split(',').map(Number)) : [],
     is_active: row.is_active,
   }
   subDialogVisible.value = true
@@ -991,6 +991,12 @@ onMounted(async () => {
   const qReportId = route.query.report_id
   if (qTab) activeTab.value = qTab
   if (qReportId) {
+    // 当URL中有report_id时，增大分页大小以查找目标报告
+    const maxSearchSize = 200
+    if (reportPageSize.value < maxSearchSize) {
+      reportPageSize.value = maxSearchSize
+      await fetchReports()
+    }
     const target = reports.value.find(r => String(r.id) === String(qReportId))
     if (target) {
       selectReport(target)

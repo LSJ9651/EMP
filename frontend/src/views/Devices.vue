@@ -205,7 +205,6 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDevices, createDevice, updateDevice, deleteDevice, getDeviceRanking, runWorkflowAnalyze } from '../api/api.js'
-import StatCard from '../components/common/StatCard.vue'
 import PageTitle from '../components/common/PageTitle.vue'
 import Toolbar from '../components/common/Toolbar.vue'
 

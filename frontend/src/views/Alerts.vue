@@ -363,8 +363,14 @@ function showEditThreshold(row) {
 }
 
 async function toggleThreshold(row, val) {
-  await updateThreshold(row.id, { is_enabled: val })
-  ElMessage.success('已更新')
+  try {
+    await updateThreshold(row.id, { is_enabled: val })
+    ElMessage.success('已更新')
+  } catch (e) {
+    // 回滚切换状态
+    row.is_enabled = !val
+    ElMessage.error('更新失败，请重试')
+  }
 }
 
 async function handleThresholdSave() {

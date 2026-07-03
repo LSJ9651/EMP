@@ -229,6 +229,7 @@ const warnings = ref([])
 const detailVisible = ref(false)
 const detailWorkshop = ref('')
 const detailData = ref([])
+const detailLoading = ref(false)
 
 const barChartRef = ref(null)
 const pieChartRef = ref(null)
@@ -292,8 +293,8 @@ async function fetchDeviceData() {
     if (res.code === 200) {
       deviceData.value = res.data || []
     }
-  } catch {
-    // 静默
+  } catch (e) {
+    ElMessage.error('获取设备成本明细失败')
   } finally {
     deviceLoading.value = false
   }
@@ -323,14 +324,14 @@ async function onRuleChange(val) {
 async function showWorkshopDetail(row) {
   detailWorkshop.value = row.workshop
   detailVisible.value = true
-  loading.value = true
+  detailLoading.value = true
   try {
     const res = await getWorkshopDetail(row.workshop, { days: 30 })
     detailData.value = res.data || []
   } catch {
     ElMessage.error('获取明细失败')
   } finally {
-    loading.value = false
+    detailLoading.value = false
   }
 }
 
