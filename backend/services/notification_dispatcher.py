@@ -81,14 +81,21 @@ def send_email(config: dict, report_data: dict) -> dict:
 
         msg.attach(MIMEText(body, "plain", "utf-8"))
 
-        # 连接 SMTP 服务器
-        if use_tls:
-            server = smtplib.SMTP(smtp_server, smtp_port)
+        # 根据端口选择 SSL/TLS 连接方式
+        SMTP_TIMEOUT = 15
+        if smtp_port == 465:
+            # 465 端口使用直接 SSL（QQ邮箱、Gmail等主流邮箱的 SSL 端口）
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=SMTP_TIMEOUT)
+            server.ehlo()
+        elif use_tls:
+            # 587 等端口使用 STARTTLS 升级到加密连接
+            server = smtplib.SMTP(smtp_server, smtp_port, timeout=SMTP_TIMEOUT)
             server.ehlo()
             server.starttls()
             server.ehlo()
         else:
-            server = smtplib.SMTP(smtp_server, smtp_port)
+            # 25 端口非加密连接
+            server = smtplib.SMTP(smtp_server, smtp_port, timeout=SMTP_TIMEOUT)
 
         if auth_username and auth_password:
             server.login(auth_username, auth_password)
@@ -100,8 +107,12 @@ def send_email(config: dict, report_data: dict) -> dict:
         logger.info(f"邮件发送成功: {report_name} -> {recipient_email}")
         return {"success": True, "error": None}
 
-    except smtplib.SMTPAuthenticationError:
-        err_msg = "SMTP 认证失败，请检查用户名和密码"
+    except smtplib.SMTPAuthenticationError as e:
+        err_msg = f"SMTP 认证失败，请检查用户名和密码: {e.smtp_code} {e.smtp_error.decode('utf-8', errors='ignore') if isinstance(e.smtp_error, bytes) else e.smtp_error}"
+        logger.error(f"邮件发送失败: {err_msg}")
+        return {"success": False, "error": err_msg}
+    except smtplib.SMTPServerDisconnected as e:
+        err_msg = f"SMTP 连接断开：请检查端口号是否正确（465=SSL, 587=TLS）, 当前端口={smtp_port}"
         logger.error(f"邮件发送失败: {err_msg}")
         return {"success": False, "error": err_msg}
     except smtplib.SMTPException as e:
