@@ -146,6 +146,10 @@ PERMISSION_MODULES = [
          {"feature": "config", "label": "系统配置", "desc": "修改系统参数与AI配置"},
          {"feature": "user_manage", "label": "用户管理", "desc": "创建、编辑、删除用户"},
      ]},
+    {"module": "knowledge_base", "label": "知识库管理", "icon": "FolderOpened",
+     "features": [
+         {"feature": "manage", "label": "管理知识库", "desc": "创建、编辑、删除知识库及上传文档"},
+     ]},
 ]
 
 

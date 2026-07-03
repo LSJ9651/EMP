@@ -111,6 +111,16 @@ const routes = [
       permission: { module: 'system', feature: 'config' },
     },
   },
+  {
+    path: '/knowledge-base',
+    name: 'KnowledgeBase',
+    component: () => import('../views/KnowledgeBase.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['admin'],
+      permission: { module: 'knowledge_base', feature: 'manage' },
+    },
+  },
 ]
 
 // 角色 → 默认首页路由映射

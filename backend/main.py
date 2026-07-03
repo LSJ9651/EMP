@@ -5,6 +5,7 @@
 
 import threading
 import time
+import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -25,6 +26,9 @@ async def lifespan(app: FastAPI):
     # 启动前：确保数据库表存在并初始化默认管理员
     Base.metadata.create_all(bind=engine)
     logger.info("数据库表已就绪")
+
+    # 创建 RAG 数据目录
+    _ensure_data_dirs()
 
     # 初始化默认管理员账户
     init_database()
@@ -148,6 +152,17 @@ async def lifespan(app: FastAPI):
     logger.info("应用已关闭")
 
 
+def _ensure_data_dirs():
+    """确保 RAG 相关数据目录存在"""
+    dirs = [
+        os.getenv("DOCUMENT_UPLOAD_DIR", "./data/documents"),
+        os.getenv("CHROMA_PERSIST_DIR", "./data/chromadb"),
+    ]
+    for d in dirs:
+        os.makedirs(d, exist_ok=True)
+    logger.info("RAG 数据目录已就绪")
+
+
 app = FastAPI(
     title="能耗智能管理优化平台",
     description="工业能耗监控与优化系统 API",
@@ -165,7 +180,7 @@ app.add_middleware(
 )
 
 # 注册路由模块
-from routers import devices, telemetry, tariffs, alerts, agent, reports, dashboard, auth, report_center, cost_allocation, chat, ai_config, workflows, notifications
+from routers import devices, telemetry, tariffs, alerts, agent, reports, dashboard, auth, report_center, cost_allocation, chat, ai_config, workflows, notifications, knowledge_base, rag_chat, llm_config
 
 app.include_router(devices.router)
 app.include_router(telemetry.router)
@@ -181,6 +196,9 @@ app.include_router(chat.router)
 app.include_router(ai_config.router)
 app.include_router(workflows.router)
 app.include_router(notifications.router)
+app.include_router(knowledge_base.router)
+app.include_router(rag_chat.router)
+app.include_router(llm_config.router)
 
 
 @app.get("/")

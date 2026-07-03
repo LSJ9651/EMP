@@ -165,3 +165,32 @@ export const runWorkflowAnalyze = (data) => http.post('/workflows/analyze', data
 export const runWorkflowOptimize = (data) => http.post('/workflows/optimize', data, { timeout: 300000 })
 export const getWorkflowHistory = (params) => http.get('/workflows/history', { params })
 export const getWorkflowDetail = (id) => http.get(`/workflows/history/${id}`)
+
+// ========== 知识库管理 ==========
+export const getKnowledgeBases = () => http.get('/knowledge-bases')
+export const createKnowledgeBase = (data) => http.post('/knowledge-bases', data)
+export const updateKnowledgeBase = (id, data) => http.put(`/knowledge-bases/${id}`, data)
+export const deleteKnowledgeBase = (id) => http.delete(`/knowledge-bases/${id}`)
+
+// ========== 文档管理 ==========
+export const getDocuments = (kbId) => http.get(`/knowledge-bases/${kbId}/documents`)
+export const uploadDocument = (kbId, file) => {
+  const form = new FormData()
+  form.append('file', file)
+  return http.post(`/knowledge-bases/${kbId}/documents/upload`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+export const deleteDocument = (kbId, docId) => http.delete(`/knowledge-bases/${kbId}/documents/${docId}`)
+export const reprocessDocument = (kbId, docId) => http.post(`/knowledge-bases/${kbId}/documents/${docId}/reprocess`)
+
+// ========== RAG 对话 ==========
+export const getRagSessions = () => http.get('/rag/sessions')
+export const createRagSession = (data) => http.post('/rag/sessions', data)
+export const deleteRagSession = (sessionId) => http.delete(`/rag/sessions/${encodeURIComponent(sessionId)}`)
+export const getRagMessages = (sessionId) => http.get(`/rag/sessions/${encodeURIComponent(sessionId)}/messages`)
+
+// ========== LLM 配置 ==========
+export const getLLMConfig = () => http.get('/llm-config')
+export const saveLLMConfig = (data) => http.post('/llm-config', data)
+export const testLLMConnection = (data) => http.post('/llm-config/test', data)

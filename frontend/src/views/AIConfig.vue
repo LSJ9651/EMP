@@ -1,95 +1,105 @@
 <template>
   <div class="ai-config-page">
-    <PageTitle title="AI 智能体管理" icon="Cpu" subtitle="配置 Coze 智能体工作流，管理本地/云端模式切换" />
+    <PageTitle title="AI 智能体管理" icon="Cpu" subtitle="配置 Coze 云端智能体 / RAG 本地 LLM 与知识库" />
 
-    <!-- 总开关 -->
-    <el-card class="master-card" shadow="hover">
-      <div class="master-switch-area">
-        <div class="master-info">
-          <span class="master-icon">🚀</span>
-          <div>
-            <div class="master-title">云端智能体总开关</div>
-            <div class="master-desc">
-              {{ config.enable_cloud_agent ? '已启用云端模式，各服务可独立切换' : '使用本地规则引擎模式' }}
+    <el-tabs v-model="activeTab" type="border-card" class="config-tabs">
+      <!-- Tab 1: Coze 云端智能体 -->
+      <el-tab-pane label="云端智能体" name="coze">
+        <!-- 总开关 -->
+        <el-card class="master-card" shadow="hover">
+          <div class="master-switch-area">
+            <div class="master-info">
+              <span class="master-icon">🚀</span>
+              <div>
+                <div class="master-title">云端智能体总开关</div>
+                <div class="master-desc">
+                  {{ config.enable_cloud_agent ? '已启用云端模式，各服务可独立切换' : '使用本地规则引擎模式' }}
+                </div>
+              </div>
+            </div>
+            <el-switch
+              v-model="config.enable_cloud_agent"
+              active-text="云端"
+              inactive-text="本地"
+              inline-prompt
+              size="large"
+              @change="onMasterChange"
+            />
+          </div>
+        </el-card>
+
+        <!-- API Key 配置 -->
+        <el-card class="apikey-card" shadow="hover">
+          <div class="apikey-header">
+            <span class="master-icon">🔑</span>
+            <div>
+              <div class="master-title">Coze API 配置</div>
+              <div class="master-desc">所有工作流和智能体共用的认证信息</div>
             </div>
           </div>
-        </div>
-        <el-switch
-          v-model="config.enable_cloud_agent"
-          active-text="云端"
-          inactive-text="本地"
-          inline-prompt
-          size="large"
-          @change="onMasterChange"
+          <el-form label-width="100px" size="default" class="apikey-form">
+            <el-form-item label="API Key">
+              <el-input
+                v-model="config.coze_api_key"
+                placeholder="请输入 Coze API Key"
+                type="password"
+                show-password
+              />
+            </el-form-item>
+            <el-form-item label="API 地址">
+              <el-input
+                v-model="config.coze_api_base"
+                placeholder="https://api.coze.cn"
+              />
+            </el-form-item>
+          </el-form>
+        </el-card>
+
+        <!-- 三个服务卡片 -->
+        <ServiceConfigCard
+          title="能耗分析工作流"
+          icon="📊"
+          :service-type="'analyze'"
+          :id-label="'工作流 ID'"
+          v-model="config.analyze"
+          :master-on="config.enable_cloud_agent"
         />
-      </div>
-    </el-card>
+        <ServiceConfigCard
+          title="调度优化工作流"
+          icon="📋"
+          :service-type="'optimize'"
+          :id-label="'工作流 ID'"
+          v-model="config.optimize"
+          :master-on="config.enable_cloud_agent"
+        />
+        <ServiceConfigCard
+          title="对话智能体"
+          icon="💬"
+          :service-type="'chat'"
+          :id-label="'Bot ID'"
+          v-model="config.chat"
+          :master-on="config.enable_cloud_agent"
+        />
 
-    <!-- API Key 配置 -->
-    <el-card class="apikey-card" shadow="hover">
-      <div class="apikey-header">
-        <span class="master-icon">🔑</span>
-        <div>
-          <div class="master-title">Coze API 配置</div>
-          <div class="master-desc">所有工作流和智能体共用的认证信息</div>
+        <!-- Coze 底部操作 -->
+        <div class="action-bar">
+          <el-button type="primary" :loading="saving" @click="handleSave">
+            <el-icon><Check /></el-icon>
+            保存配置
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><RefreshLeft /></el-icon>
+            恢复默认
+          </el-button>
+          <span v-if="lastSaved" class="save-time">上次保存：{{ lastSaved }}</span>
         </div>
-      </div>
-      <el-form label-width="100px" size="default" class="apikey-form">
-        <el-form-item label="API Key">
-          <el-input
-            v-model="config.coze_api_key"
-            placeholder="请输入 Coze API Key"
-            type="password"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="API 地址">
-          <el-input
-            v-model="config.coze_api_base"
-            placeholder="https://api.coze.cn"
-          />
-        </el-form-item>
-      </el-form>
-    </el-card>
+      </el-tab-pane>
 
-    <!-- 三个服务卡片 -->
-    <ServiceConfigCard
-      title="能耗分析工作流"
-      icon="📊"
-      :service-type="'analyze'"
-      :id-label="'工作流 ID'"
-      v-model="config.analyze"
-      :master-on="config.enable_cloud_agent"
-    />
-    <ServiceConfigCard
-      title="调度优化工作流"
-      icon="📋"
-      :service-type="'optimize'"
-      :id-label="'工作流 ID'"
-      v-model="config.optimize"
-      :master-on="config.enable_cloud_agent"
-    />
-    <ServiceConfigCard
-      title="对话智能体"
-      icon="💬"
-      :service-type="'chat'"
-      :id-label="'Bot ID'"
-      v-model="config.chat"
-      :master-on="config.enable_cloud_agent"
-    />
-
-    <!-- 底部操作 -->
-    <div class="action-bar">
-      <el-button type="primary" :loading="saving" @click="handleSave">
-        <el-icon><Check /></el-icon>
-        保存配置
-      </el-button>
-      <el-button @click="handleReset">
-        <el-icon><RefreshLeft /></el-icon>
-        恢复默认
-      </el-button>
-      <span v-if="lastSaved" class="save-time">上次保存：{{ lastSaved }}</span>
-    </div>
+      <!-- Tab 2: 本地 LLM -->
+      <el-tab-pane label="本地 LLM" name="llm">
+        <LLMConfigForm @saved="onLLMConfigSaved" />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
@@ -99,7 +109,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Check, RefreshLeft } from '@element-plus/icons-vue'
 import { getAIConfig, saveAIConfig } from '../api/api.js'
 import ServiceConfigCard from '../components/config/ServiceConfigCard.vue'
+import LLMConfigForm from '../components/config/LLMConfigForm.vue'
 import PageTitle from '../components/common/PageTitle.vue'
+
+const activeTab = ref('coze')
 
 const defaultConfig = {
   enable_cloud_agent: false,
@@ -185,6 +198,10 @@ function onMasterChange(val) {
     config.value.optimize.enabled = false
     config.value.chat.enabled = false
   }
+}
+
+function onLLMConfigSaved() {
+  ElMessage.success('LLM 配置已保存')
 }
 
 // 自动保存防抖（1.5s）
@@ -280,5 +297,10 @@ onMounted(loadConfig)
   margin-left: auto;
   color: var(--text-placeholder);
   font-size: 12px;
+}
+
+.config-tabs {
+  margin-top: 8px;
+  border-radius: 8px;
 }
 </style>

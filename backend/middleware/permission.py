@@ -10,6 +10,7 @@ PERMISSIONS = {
     "admin": [
         "execute_workflow", "view_history", "config_ai", "batch_workflow",
         "manage_devices", "manage_tariffs", "manage_alerts", "manage_reports",
+        "manage_knowledge_base",
     ],
     "dispatcher": [
         "execute_workflow", "view_history", "batch_workflow",
@@ -29,6 +30,7 @@ ACTION_TO_PERMISSION = {
     "manage_tariffs": ("system", "user_manage"),
     "manage_alerts": ("system", "user_manage"),
     "manage_reports": ("reports", "manage"),
+    "manage_knowledge_base": ("knowledge_base", "manage"),
 }
 
 

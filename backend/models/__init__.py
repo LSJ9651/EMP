@@ -6,6 +6,7 @@ from .alert import AlertThreshold, AlertRecord
 from .energy import Telemetry, TariffPolicy
 from .ai import AIConfigEntry, ChatHistory, WorkflowExecution, AgentReport, ScheduleTask, ScheduleExecution
 from .subscription import ReportSubscription, Notification
+from .rag import KnowledgeBase, Document, DocumentChunk, RAGChatSession, RAGChatMessage, LLMConfig
 
 __all__ = [
     "Base",
@@ -16,4 +17,5 @@ __all__ = [
     "AIConfigEntry", "ChatHistory", "WorkflowExecution", "AgentReport",
     "ScheduleTask", "ScheduleExecution",
     "ReportSubscription", "Notification",
+    "KnowledgeBase", "Document", "DocumentChunk", "RAGChatSession", "RAGChatMessage", "LLMConfig",
 ]

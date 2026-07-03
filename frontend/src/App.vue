@@ -101,6 +101,10 @@
             <el-icon><Cpu /></el-icon>
             <span>AI 管理</span>
           </el-menu-item>
+          <el-menu-item index="/knowledge-base" v-if="hasRole('admin') || hasPermission('knowledge_base','manage')">
+            <el-icon><FolderOpened /></el-icon>
+            <span>知识库管理</span>
+          </el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -193,6 +197,7 @@ const routeGroupMap = {
   '/cost-allocation': 'group-schedule',
   '/users': 'group-system',
   '/ai-config': 'group-system',
+  '/knowledge-base': 'group-system',
 }
 
 const openedMenuGroups = computed(() => {

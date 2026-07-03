@@ -33,3 +33,7 @@ frontend/dist/
 htmlcov/
 .pytest_cache/
 *.pyc
+
+# RAG / Documents
+backend/data/chromadb/
+backend/data/documents/
