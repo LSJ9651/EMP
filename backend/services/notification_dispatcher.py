@@ -76,10 +76,9 @@ def send_email(config: dict, report_data: dict) -> dict:
     try:
         msg = MIMEMultipart()
         msg["From"] = sender_email
+        msg["To"] = recipient_email
         msg["Subject"] = f"【能耗平台】报告「{report_name}」已生成"
 
-        # 如果有收件人地址，可以设置 To，此处从配置中获取
-        # 当前设计是未指定收件人，由 SMTP 服务器默认处理
         msg.attach(MIMEText(body, "plain", "utf-8"))
 
         # 连接 SMTP 服务器
