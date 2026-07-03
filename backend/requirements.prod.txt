@@ -1,0 +1,30 @@
+# 能耗智能管理优化平台 — 生产环境依赖
+# =============================================
+# 仅包含运行时必需的依赖，剔除开发/测试工具
+
+# Web 框架 — 高性能异步 REST API
+fastapi==0.104.1
+
+# ASGI 服务器 — 生产环境运行
+uvicorn[standard]==0.24.0
+
+# ORM — 跨数据库兼容
+SQLAlchemy==2.0.23
+
+# 数据验证 — 自动生成 OpenAPI Schema
+pydantic==2.13.0
+
+# 环境变量管理
+python-dotenv==1.0.0
+
+# HTTP 客户端 — 异步调用智能体 API
+httpx==0.28.1
+
+# Coze SDK — 扣子智能体平台官方 SDK
+cozepy==0.20.0
+
+# Excel 导出 — 报表生成
+openpyxl==3.1.2
+
+# 密码安全 — bcrypt 哈希
+passlib[bcrypt]==1.7.4

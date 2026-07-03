@@ -1,0 +1,15 @@
+{
+  "workflow_detail": {
+    "workflow_id": "7652030439678967848",
+    "workflow_name": "Energy_Consumption_Analysis",
+    "description": "能耗分析工作流",
+    "icon_url": "https://lf6-appstore-sign.oceancloudapi.com/ocean-cloud-tos/plugin_icon/workflow.png?lk3s=81d4c505&x-expires=1781766754&x-signature=E03SG9Lur4yx9REqUxKAzUPPREs%3D",
+    "app_id": "0",
+    "created_at": 1781627199,
+    "updated_at": 1781685503,
+    "creator": {
+      "id": "2666728137700260",
+      "name": "整点码头的薯条 "
+    }
+  }
+}

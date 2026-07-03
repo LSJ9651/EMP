@@ -1,0 +1,56 @@
+{
+  "analysis": {
+    "code": 200,
+    "message": "success",
+    "data": {
+      "success": true,
+      "execution_id": 51,
+      "report_id": 83,
+      "data": {
+        "summary": "空压机A-1额定功率75.0kW，平均运行功率为48.38kW，负载率约64.5%，功率波动标准差为10，运行功率区间在31.84kW至67.01kW之间。本次监测未发现异常能耗事件，设备整体运行状态稳定，但存在一定的功率波动。",
+        "anomalies": [],
+        "suggestions": [
+          "监测高峰时段（13:04）的用气需求，评估是否需调整设备配置或调度",
+          "结合用气时段分析，优化空压机启停策略以提升能效",
+          "排查进气压力、用气需求稳定性，减少不必要的功率波动",
+          "定期对设备进行维护保养，维持良好运行状态",
+          "建立长期能耗监测机制，对比时段数据挖掘节能潜力"
+        ],
+        "total_power_avg": 48.38,
+        "analyzed_devices": 1,
+        "time_range": "auto ~ auto",
+        "_mode": "cloud"
+      },
+      "mode_used": "cloud",
+      "elapsed_ms": 15250
+    }
+  },
+  "report": {
+    "id": 83,
+    "report_type": "analysis",
+    "trigger_time": "2026-06-18T15:56:52.946816",
+    "input_summary": "device_id=1, range=None~None",
+    "input_payload": {
+      "device_id": 1,
+      "start_time": null,
+      "end_time": null,
+      "max_points": 200
+    },
+    "output_json": {
+      "summary": "空压机A-1额定功率75.0kW，平均运行功率为48.38kW，负载率约64.5%，功率波动标准差为10，运行功率区间在31.84kW至67.01kW之间。本次监测未发现异常能耗事件，设备整体运行状态稳定，但存在一定的功率波动。",
+      "anomalies": [],
+      "suggestions": [
+        "监测高峰时段（13:04）的用气需求，评估是否需调整设备配置或调度",
+        "结合用气时段分析，优化空压机启停策略以提升能效",
+        "排查进气压力、用气需求稳定性，减少不必要的功率波动",
+        "定期对设备进行维护保养，维持良好运行状态",
+        "建立长期能耗监测机制，对比时段数据挖掘节能潜力"
+      ],
+      "total_power_avg": 48.38,
+      "analyzed_devices": 1,
+      "time_range": "auto ~ auto",
+      "_mode": "cloud"
+    },
+    "created_at": "2026-06-18T15:56:52.948723"
+  }
+}

@@ -1,0 +1,122 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+  background-color: #f0f2f5;
+}
+
+// ========== 登录页 CSS 变量 ==========
+:root {
+  --login-bg-start: #0a0e27;
+  --login-bg-end: #1a1040;
+  --login-bg-middle: #0d2137;
+  --login-primary: #4f8cf7;
+  --login-primary-hover: #6c5ce7;
+  --login-glass-bg: rgba(255, 255, 255, 0.06);
+  --login-glass-border: rgba(255, 255, 255, 0.08);
+  --login-text-primary: #ffffff;
+  --login-text-secondary: rgba(255, 255, 255, 0.7);
+  --login-error: #ff6b6b;
+}
+
+.app-container {
+  height: 100vh;
+}
+
+.app-sidebar {
+  background-color: #001529;
+  overflow-y: auto;
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .side-menu {
+    border-right: none;
+  }
+}
+
+.app-main {
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 0 24px;
+  height: 56px;
+
+  .header-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.app-content {
+  background: #f0f2f5;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+// 通用卡片样式
+.stat-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  .stat-label {
+    font-size: 14px;
+    color: #8c8c8c;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+
+    .unit {
+      font-size: 14px;
+      font-weight: 400;
+      color: #8c8c8c;
+      margin-left: 4px;
+    }
+  }
+}
+
+// 图表容器
+.chart-box {
+  width: 100%;
+  height: 400px;
+}
+
+// 页面标题
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 20px;
+}

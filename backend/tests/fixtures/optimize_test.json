@@ -1,0 +1,50 @@
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "success": true,
+    "execution_id": 47,
+    "report_id": 71,
+    "data": {
+      "schedule": [
+        {
+          "device_id": 1,
+          "device_name": "空压机 A-1",
+          "start": "08:00",
+          "end": "11:00",
+          "action": "run",
+          "price_per_kwh": 1.2
+        },
+        {
+          "device_id": 1,
+          "device_name": "空压机 A-1",
+          "start": "11:00",
+          "end": "18:00",
+          "action": "run",
+          "price_per_kwh": 0.8
+        },
+        {
+          "device_id": 1,
+          "device_name": "空压机 A-1",
+          "start": "18:00",
+          "end": "22:00",
+          "action": "run",
+          "price_per_kwh": 1.2
+        },
+        {
+          "device_id": 1,
+          "device_name": "空压机 A-1",
+          "start": "22:00",
+          "end": "06:00",
+          "action": "run",
+          "price_per_kwh": 0.3
+        }
+      ],
+      "estimated_cost_saved": 750.0,
+      "reasoning": "目标产量 1000 件，总产能 1 件/小时，预计需 1449.3 工作小时。利用谷电时段(¥0.3/kWh)高负载运行、峰电时段(¥1.2/kWh)待机，预计节省约 ¥750.0",
+      "production_goal": 1000
+    },
+    "mode_used": "local",
+    "elapsed_ms": 1119
+  }
+}

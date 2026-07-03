@@ -1,0 +1,41 @@
+# 能耗智能管理优化平台 — 开发环境依赖
+# =============================================
+
+# Web 框架 — 高性能异步 REST API
+fastapi==0.104.1
+
+# ASGI 服务器 — 支持热重载
+uvicorn[standard]==0.24.0
+
+# ORM — 跨数据库兼容
+SQLAlchemy==2.0.23
+
+# 数据验证 — 自动生成 OpenAPI Schema
+pydantic==2.13.0
+
+# 环境变量管理
+python-dotenv==1.0.0
+
+# HTTP 客户端 — 异步调用智能体 API
+httpx==0.28.1
+
+# Coze SDK — 扣子智能体平台官方 SDK
+cozepy==0.20.0
+
+# Excel 导出 — 报表生成
+openpyxl==3.1.2
+
+# 密码安全 — bcrypt 哈希
+passlib[bcrypt]==1.7.4
+
+# ========== 开发工具 ==========
+
+# 测试框架
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# 代码质量
+flake8==6.1.0
+black==23.12.0
+isort==5.13.2
+mypy==1.7.1
