@@ -7,12 +7,22 @@
 import json
 import logging
 import smtplib
+import sys
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from typing import Optional
 
+# 确保通知日志能输出到控制台
 logger = logging.getLogger("notification")
+if not logger.handlers:
+    _handler = logging.StreamHandler(sys.stdout)
+    _handler.setFormatter(logging.Formatter(
+        '[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    ))
+    logger.addHandler(_handler)
+    logger.setLevel(logging.INFO)
 
 
 def send_email(config: dict, report_data: dict) -> dict:
@@ -29,6 +39,7 @@ def send_email(config: dict, report_data: dict) -> dict:
     smtp_server = config.get("smtp_server", "")
     smtp_port = config.get("smtp_port", 587)
     sender_email = config.get("sender_email", "")
+    recipient_email = config.get("recipient_email", "")
     auth_username = config.get("auth_username", sender_email)
     auth_password = config.get("auth_password", "")
     use_tls = config.get("use_tls", True)
@@ -36,6 +47,8 @@ def send_email(config: dict, report_data: dict) -> dict:
 
     if not smtp_server or not sender_email:
         return {"success": False, "error": "SMTP 配置不完整：缺少服务器地址或发送邮箱"}
+    if not recipient_email:
+        return {"success": False, "error": "未配置收件邮箱，请在订阅的邮件配置中填写收件邮箱"}
 
     report_name = report_data.get("report_name", "能耗分析报告")
     report_summary = report_data.get("report_summary", "")
@@ -81,11 +94,11 @@ def send_email(config: dict, report_data: dict) -> dict:
         if auth_username and auth_password:
             server.login(auth_username, auth_password)
 
-        # 发送邮件（发给发件人自己，由 SMTP 服务器决定实际投递）
-        server.sendmail(sender_email, [sender_email], msg.as_string())
+        # 发送邮件
+        server.sendmail(sender_email, [recipient_email], msg.as_string())
         server.quit()
 
-        logger.info(f"邮件发送成功: {report_name} -> {sender_email}")
+        logger.info(f"邮件发送成功: {report_name} -> {recipient_email}")
         return {"success": True, "error": None}
 
     except smtplib.SMTPAuthenticationError:

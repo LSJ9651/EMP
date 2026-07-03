@@ -34,6 +34,9 @@
           placeholder="SMTP 授权码或密码"
         />
       </el-form-item>
+      <el-form-item label="收件邮箱" prop="recipient_email">
+        <el-input v-model="config.recipient_email" placeholder="例如：admin@example.com" />
+      </el-form-item>
       <el-form-item label="启用 TLS">
         <el-switch v-model="config.use_tls" />
         <span class="switch-hint">{{ config.use_tls ? '加密传输 (推荐)' : '非加密传输' }}</span>
@@ -65,6 +68,7 @@ const defaultConfig = {
   smtp_server: '',
   smtp_port: 587,
   sender_email: '',
+  recipient_email: '',
   auth_username: '',
   auth_password: '',
   use_tls: true,
@@ -84,6 +88,10 @@ const rules = {
   ],
   sender_email: [
     { required: true, message: '请输入发送邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' },
+  ],
+  recipient_email: [
+    { required: true, message: '请输入收件邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' },
   ],
   auth_password: [
@@ -108,6 +116,7 @@ function getConfig() {
     smtp_server: config.smtp_server || '',
     smtp_port: config.smtp_port || 587,
     sender_email: config.sender_email || '',
+    recipient_email: config.recipient_email || '',
     auth_username: config.auth_username || config.sender_email || '',
     auth_password: config.auth_password || '',
     use_tls: config.use_tls !== false,
