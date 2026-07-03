@@ -4,7 +4,36 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-06-21
+## [1.0.0] - 2026-07-04
+
+### Added
+- **RAG 知识库问答**：上传 PDF/TXT/MD 文档 → 自动解析分块 → ChromaDB 向量化 → LLM 检索增强生成，支持引用溯源
+- **LLM 配置管理**：对话模型与嵌入模型独立配置，支持 OpenAI 兼容接口 / Ollama 本地模型混合模式
+- **知识库管理**：可视化创建/编辑/删除知识库，拖拽上传文档，自动后台处理与状态轮询
+- **API Key 安全加固**：敏感 Key 迁移到 `.env` 环境变量存储，前端只显示 `********` 占位符，杜绝脱敏 Key 覆盖
+- **AI 配置页重构**：标签页拆分（云端智能体 / 本地 LLM），配置更清晰
+- **聊天窗口扩展**：支持普通对话与 RAG 问答两种模式切换，状态指示器区分云端/本地模型
+- **内联组件**：PageTitle、StatCard、Toolbar 等通用 UI 组件
+- **项目文档**：新增 `docs/RAG知识库问答.md` 完整功能说明
+- **作者声明**：新增 `作者声明.md`（仅限个人学习使用）
+
+### Changed
+- API Key 读取优先级：`.env` 环境变量 → 数据库 `llm_config` 表
+- 前后端端口统一为 8000/5173，`start.bat` 和 `stop.bat` 兼容中英文 Windows
+- `frontend/dist/`、`backend/backups/`、`backend/data/` 加入 `.gitignore`
+
+### Fixed
+- API Key 被脱敏值覆盖导致 LLM 调用失败的 Bug
+- `backend/init_db.py` 被误删导致 `main.py` 启动报 `ModuleNotFoundError`
+- `stop.bat` 在中文 Windows 上无法匹配 `LISTENING` 状态
+- `start.bat` 依赖检测使用全局 Python 而非 venv 内的 Python
+- 日志备份文件 (`backend.err`, `backend.log`) 清理
+
+### Removed
+- 清理冗余文件：`screenshot_test.py` / `screenshot_test2.py` / `backend/backups/`（47MB）/ `backend/test_*.db` / 空 `energy_optimizer.db`（根目录）
+- 废弃重复脚本：`backend/init_db.py`（恢复后用精简版）、`backend/start.py`、`frontend/dist/`（构建产物）
+
+## [1.0.0-rc] - 2026-06-21
 
 ### Added
 - Email/DingTalk 报告订阅通知配置

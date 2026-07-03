@@ -37,3 +37,8 @@ htmlcov/
 # RAG / Documents
 backend/data/chromadb/
 backend/data/documents/
+
+# Backups
+backend/backups/
+*.bak
+*.old

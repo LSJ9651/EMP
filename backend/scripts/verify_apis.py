@@ -48,13 +48,13 @@ def verify_api_endpoints():
     print("\n" + "=" * 50)
     print("2. 验证 API 端点")
     print("=" * 50)
-    print("  (需要后端服务运行在 http://localhost:8080)")
+    print("  (需要后端服务运行在 http://localhost:8000)")
 
     try:
         import urllib.request
         import urllib.error
 
-        base_url = "http://localhost:8080"
+        base_url = "http://localhost:8000"
 
         endpoints = [
             ("GET", "/"),
