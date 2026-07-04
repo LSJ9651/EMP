@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 
@@ -53,37 +53,47 @@ if not exist "%BACKEND_DIR%\.venv\Scripts\python.exe" (
     popd
 )
 
-:: Activate venv and check dependencies
-call "%BACKEND_DIR%\.venv\Scripts\activate.bat"
-"%BACKEND_DIR%\.venv\Scripts\python" -c "import fastapi" >nul 2>&1
+:: Always install/verify backend dependencies (pip skips already-installed packages)
+:: Retry up to 3 times on network/timeout failure
+echo         Installing/verifying backend dependencies...
+set RETRY=0
+
+:retry_pip
+"%BACKEND_DIR%\.venv\Scripts\pip" install -r "%BACKEND_DIR%\requirements.txt"
 if %errorlevel% neq 0 (
-    echo         [WARN] Backend dependencies not installed, installing...
-    pushd "%BACKEND_DIR%"
-    pip install -r requirements.txt
-    if %errorlevel% neq 0 (
-        echo [ERROR] Failed to install backend dependencies.
-        popd
-        pause
-        exit /b 1
+    set /a RETRY+=1
+    if !RETRY! lss 3 (
+        echo         [WARN] Install failed (attempt !RETRY!/3), retrying in 5 seconds...
+        %WINDIR%\System32\ping -n 5 127.0.0.1 >nul
+        goto retry_pip
     )
-    popd
+    echo [ERROR] Failed to install backend dependencies after 3 attempts.
+    pause
+    exit /b 1
 )
 echo         Backend dependencies ready.
-call deactivate
 
 :: ---------- Check frontend dependencies ----------
 echo [4/5] Checking frontend dependencies...
 if not exist "%FRONTEND_DIR%\node_modules" (
     echo         [WARN] Frontend dependencies not installed, installing...
+    set RETRY_NPM=0
+
+:retry_npm
     pushd "%FRONTEND_DIR%"
     call npm install
+    popd
     if %errorlevel% neq 0 (
-        echo [ERROR] Failed to install frontend dependencies.
-        popd
+        set /a RETRY_NPM+=1
+        if !RETRY_NPM! lss 3 (
+            echo         [WARN] npm install failed (attempt !RETRY_NPM!/3), retrying in 5 seconds...
+            %WINDIR%\System32\ping -n 5 127.0.0.1 >nul
+            goto retry_npm
+        )
+        echo [ERROR] Failed to install frontend dependencies after 3 attempts.
         pause
         exit /b 1
     )
-    popd
 )
 echo         Frontend dependencies ready.
 
@@ -103,18 +113,23 @@ echo         API Docs: http://localhost:8000/docs
 
 :: Wait for backend, then verify it is really up
 echo         Waiting for backend service...
-timeout /t 3 /nobreak >nul
+%WINDIR%\System32\ping -n 3 127.0.0.1 >nul
 
-:: Health check: retry up to 10 seconds
-for /l %%i in (1,1,10) do (
+:: Health check: retry up to 15 seconds
+set BACKEND_UP=0
+for /l %%i in (1,1,15) do (
     >nul 2>nul curl -sf http://localhost:8000/
-    if !errorlevel! equ 0 goto :backend_ready
-    >nul 2>nul powershell -Command "try { (Invoke-WebRequest -Uri http://localhost:8000/ -UseBasicParsing).StatusCode -eq 200 } catch { $false }"
-    if !errorlevel! equ 0 goto :backend_ready
-    timeout /t 1 /nobreak >nul
+    if !errorlevel! equ 0 set BACKEND_UP=1 & goto :backend_ready
+    %WINDIR%\System32\ping -n 2 127.0.0.1 >nul
 )
-echo         [WARN] Backend did not respond, continuing anyway...
 :backend_ready
+
+if !BACKEND_UP! equ 0 (
+    echo [ERROR] Backend service did not respond at http://localhost:8000
+    echo         Check backend window for errors and fix before using the app.
+    echo         Frontend will still start but API calls will fail.
+)
+if !BACKEND_UP! equ 1 echo         Backend service is up and responding.
 
 :: Start frontend (new window)
 echo         Starting frontend service (http://localhost:5173) ...
