@@ -40,6 +40,9 @@ black==23.12.0
 isort==5.13.2
 mypy==1.7.1
 
+# 表单数据解析 — FastAPI Form 参数必需
+python-multipart>=0.0.12
+
 # ========== 新增 RAG 知识库依赖 ==========
 
 # LangChain 核心框架 — RAG 组件

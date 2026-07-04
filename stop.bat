@@ -9,11 +9,29 @@ echo   Energy Optimizer Platform - Stop Services
 echo ============================================================
 echo.
 
-rem Kill processes listening on port 8000 (Backend) and 5173 (Frontend)
-rem Strategy:
-rem   1) PowerShell Get-NetTCPConnection (works on Win8+/2012+, no locale issue)
-rem   2) netstat + findstr /c: exact match filtered to LISTENING lines
+:: ── 项目路径 ──
+set "PROJECT_DIR=%~dp0"
+set "PID_BACKEND=%PROJECT_DIR%backend\.backend.pid"
+set "PID_FRONTEND=%PROJECT_DIR%frontend\.frontend.pid"
 
+:: ── 方式 0: PID 文件优先 ──
+echo [INFO] Checking PID files ...
+for %%f in ("%PID_BACKEND%" "%PID_FRONTEND%") do (
+    if exist %%f (
+        set /p PID=<%%f
+        taskkill /pid !PID! /f >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo        [OK] Process from %%f ^(PID !PID!^) terminated.
+        ) else (
+            echo        [WARN] PID file %%f found but process !PID! could not be killed.
+        )
+        del %%f 2>nul
+    )
+)
+echo.
+
+:: ── 方式 1: PowerShell Get-NetTCPConnection (Win8+/2012+, locale-safe) ──
+:: ── 方式 2: netstat + findstr ──
 for %%p in (8000 5173) do (
     echo --- Checking port %%p ---
     set "KILLED=0"
@@ -23,10 +41,10 @@ for %%p in (8000 5173) do (
         if not "%%a"=="0" if not "%%a"=="" (
             taskkill /pid %%a /f >nul 2>&1
             if !errorlevel! equ 0 (
-                echo         [OK] Process on port %%p ^(PID %%a^) terminated.
+                echo        [OK] Process on port %%p ^(PID %%a^) terminated.
                 set "KILLED=1"
             ) else (
-                echo         [WARN] Process on port %%p ^(PID %%a^) could not be killed.
+                echo        [WARN] Process on port %%p ^(PID %%a^) could not be killed.
             )
         )
     )
@@ -36,10 +54,10 @@ for %%p in (8000 5173) do (
         if not "%%a"=="0" if not "%%a"=="" (
             taskkill /pid %%a /f >nul 2>&1
             if !errorlevel! equ 0 (
-                echo         [OK] Process on port %%p ^(PID %%a^) terminated.
+                echo        [OK] Process on port %%p ^(PID %%a^) terminated.
                 set "KILLED=1"
             ) else (
-                echo         [WARN] Process on port %%p ^(PID %%a^) could not be killed.
+                echo        [WARN] Process on port %%p ^(PID %%a^) could not be killed.
             )
         )
     )
@@ -50,9 +68,9 @@ for %%p in (8000 5173) do (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr /c:":%%p " ^| findstr /c:"LISTENING"') do set "STILL_RUNNING=1"
     if !STILL_RUNNING! equ 0 (
         if !KILLED! equ 1 (
-            echo         [OK] Port %%p is now free.
+            echo        [OK] Port %%p is now free.
         ) else (
-            echo         [INFO] Port %%p was not in use.
+            echo        [INFO] Port %%p was not in use.
         )
     ) else (
         echo  [WARN] Port %%p may still be in use - try running as Administrator.

@@ -8,6 +8,14 @@ dist/
 venv/
 env/
 
+# Python formatter / type checker caches
+.mypy_cache/
+.ruff_cache/
+.black/
+
+# Logs
+*.log
+
 # Database
 *.db
 *.sqlite3
@@ -32,13 +40,9 @@ frontend/dist/
 .coverage
 htmlcov/
 .pytest_cache/
-*.pyc
 
-# RAG / Documents
-backend/data/chromadb/
-backend/data/documents/
-
-# Backups
+# Runtime data (DB, vector store, uploads, backups)
+backend/data/
 backend/backups/
 *.bak
 *.old
