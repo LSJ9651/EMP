@@ -76,12 +76,6 @@ if %errorlevel% neq 0 (
     echo         [WARN] Backend dependencies not installed, installing...
     pushd "%BACKEND_DIR%"
     pip install -r requirements.txt
-    if %errorlevel% neq 0 (
-        echo [ERROR] Failed to install backend dependencies.
-        popd
-        pause
-        exit /b 1
-    )
     popd
 )
 echo         Backend dependencies ready.
@@ -93,12 +87,6 @@ if not exist "%FRONTEND_DIR%\node_modules" (
     echo         [WARN] Frontend dependencies not installed, installing...
     pushd "%FRONTEND_DIR%"
     call npm install
-    if %errorlevel% neq 0 (
-        echo [ERROR] Failed to install frontend dependencies.
-        popd
-        pause
-        exit /b 1
-    )
     popd
 )
 echo         Frontend dependencies ready.
