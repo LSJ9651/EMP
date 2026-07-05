@@ -25,8 +25,9 @@ cozepy==0.20.0
 # Excel 导出 — 报表生成
 openpyxl==3.1.2
 
-# 密码安全 — bcrypt 哈希
+# 密码安全 — bcrypt 哈希（bcrypt<5.0 兼容 passlib 1.7.4）
 passlib[bcrypt]==1.7.4
+bcrypt<5.0
 
 # ========== 开发工具 ==========
 

@@ -38,11 +38,33 @@ echo         All ports available.
 echo [1/6] Checking Python environment...
 where python >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERROR] Python not found. Please install Python 3.9+ and add to PATH.
+    echo [ERROR] Python not found. Please install Python 3.9-3.12 and add to PATH.
     pause
     exit /b 1
 )
-for /f "tokens=2" %%v in ('python --version 2^>^&1') do echo         Python %%v detected
+for /f "tokens=2" %%v in ('python --version 2^>^&1') do set "PYVER=%%v"
+echo         Python !PYVER! detected
+:: Validate Python version range (3.9 - 3.12)
+for /f "tokens=1,2 delims=." %%a in ("!PYVER!") do (
+    set "PYMAJOR=%%a"
+    set "PYMINOR=%%b"
+)
+if !PYMAJOR! gtr 3 (
+    echo [ERROR] Python 3.13+ is not supported due to SQLAlchemy compatibility.
+    echo        Please use Python 3.9 - 3.12. Download from https://www.python.org/downloads/
+    pause
+    exit /b 1
+)
+if !PYMAJOR! lss 3 (
+    echo [ERROR] Python 3.9+ is required. Found Python 2.x.
+    pause
+    exit /b 1
+)
+if !PYMINOR! lss 9 (
+    echo [ERROR] Python 3.9+ is required. Found Python 3.!PYMINOR!.
+    pause
+    exit /b 1
+)
 
 :: ---------- Check Node.js ----------
 echo [2/6] Checking Node.js environment...
@@ -75,6 +97,7 @@ python -c "import fastapi" >nul 2>&1
 if %errorlevel% neq 0 (
     echo         [WARN] Backend dependencies not installed, installing...
     pushd "%BACKEND_DIR%"
+    python -m pip install --upgrade pip
     pip install -r requirements.txt
     popd
 )
@@ -103,7 +126,19 @@ echo         Initializing database and seed data...
 pushd "%BACKEND_DIR%"
 call .venv\Scripts\activate.bat
 python scripts/init_db.py
+if %errorlevel% neq 0 (
+    echo [ERROR] Database initialization failed.
+    popd
+    pause
+    exit /b 1
+)
 python scripts/init_mock_data.py
+if %errorlevel% neq 0 (
+    echo [ERROR] Mock data initialization failed.
+    popd
+    pause
+    exit /b 1
+)
 call deactivate
 popd
 
@@ -123,11 +158,11 @@ echo         API Docs: http://localhost:8000/docs
 
 :: Wait for backend (HTTP health check)
 echo         Waiting for backend service to be ready...
-set "RETRIES=15"
+set "RETRIES=10"
 set "READY=0"
 for /l %%i in (1,1,!RETRIES!) do (
-    timeout /t 2 /nobreak >nul
-    powershell -NoProfile -Command "try { $r=Invoke-WebRequest -Uri http://localhost:8000/ -TimeoutSec 2 -UseBasicParsing; exit 0 } catch { exit 1 }" 2>nul
+    timeout /t 1 /nobreak >nul
+    powershell -NoProfile -Command "try { $r=Invoke-WebRequest -Uri http://localhost:8000/ -TimeoutSec 1 -UseBasicParsing; exit 0 } catch { exit 1 }" 2>nul
     if !errorlevel! equ 0 (
         set "READY=1"
         goto :backend_ready
@@ -135,7 +170,7 @@ for /l %%i in (1,1,!RETRIES!) do (
 )
 :backend_ready
 if !READY! equ 0 (
-    echo [WARN] Backend did not respond within 30 seconds. It may still be starting up.
+    echo [WARN] Backend did not respond within 10 seconds. It may still be starting up.
 ) else (
     echo         Backend is ready.
 )
@@ -143,16 +178,11 @@ if !READY! equ 0 (
 :: Start frontend (new window)
 echo         Starting frontend service (http://localhost:5173) ...
 start "Energy-Frontend" cmd /c "cd /d "%FRONTEND_DIR%" && npm run dev"
-if %errorlevel% neq 0 (
-    echo [ERROR] Failed to start frontend.
-    pause
-    exit /b 1
-)
 echo         Frontend URL: http://localhost:5173
 
 :: Save PID files for stop.bat
 echo         Saving process IDs for stop.bat...
-timeout /t 3 /nobreak >nul
+timeout /t 1 /nobreak >nul
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr /c:":8000 " ^| findstr /c:"LISTENING"') do (
     echo %%a > "%PROJECT_DIR%backend\.backend.pid"
     echo         Backend PID: %%a
